@@ -36,7 +36,7 @@ if ok then
     set_upstream_tls_client_param = apisix_ngx_upstream.set_cert_and_key
 else
     set_upstream_tls_client_param = function ()
-        return nil, "need to build APISIX-OpenResty to support upstream mTLS"
+        return nil, "need to build APISIX-Base to support upstream mTLS"
     end
 end
 
@@ -47,7 +47,7 @@ if not is_http then
         set_stream_upstream_tls = apisix_ngx_stream_upstream.set_tls
     else
         set_stream_upstream_tls = function ()
-            return nil, "need to build APISIX-OpenResty to support TLS over TCP upstream"
+            return nil, "need to build APISIX-Base to support TLS over TCP upstream"
         end
     end
 end
@@ -75,7 +75,6 @@ local function set_directly(ctx, key, ver, conf)
     ctx.upstream_conf = conf
     ctx.upstream_version = ver
     ctx.upstream_key = key
-    ctx.upstream_healthcheck_parent = conf.parent
     return
 end
 _M.set = set_directly
@@ -166,68 +165,69 @@ local function set_upstream_scheme(ctx, upstream)
 end
 
 
-local fill_node_info
-do
-    local scheme_to_port = {
-        http = 80,
-        https = 443,
-        grpc = 80,
-        grpcs = 443,
-    }
+local scheme_to_port = {
+    http = 80,
+    https = 443,
+    grpc = 80,
+    grpcs = 443,
+}
 
-    function fill_node_info(up_conf, scheme, is_stream)
-        local nodes = up_conf.nodes
-        if up_conf.nodes_ref == nodes then
-            -- filled
-            return true
-        end
 
-        local need_filled = false
-        for _, n in ipairs(nodes) do
-            if not is_stream and not n.port then
-                if up_conf.scheme ~= scheme then
-                    return nil, "Can't detect upstream's scheme. " ..
-                                "You should either specify a port in the node " ..
-                                "or specify the upstream.scheme explicitly"
-                end
+_M.scheme_to_port = scheme_to_port
 
-                need_filled = true
-            end
 
-            if not n.priority then
-                need_filled = true
-            end
-        end
-
-        up_conf.original_nodes = nodes
-
-        if not need_filled then
-            up_conf.nodes_ref = nodes
-            return true
-        end
-
-        local filled_nodes = core.table.new(#nodes, 0)
-        for i, n in ipairs(nodes) do
-            if not n.port or not n.priority then
-                filled_nodes[i] = core.table.clone(n)
-
-                if not is_stream and not n.port then
-                    filled_nodes[i].port = scheme_to_port[scheme]
-                end
-
-                -- fix priority for non-array nodes and nodes from service discovery
-                if not n.priority then
-                    filled_nodes[i].priority = 0
-                end
-            else
-                filled_nodes[i] = n
-            end
-        end
-
-        up_conf.nodes_ref = filled_nodes
-        up_conf.nodes = filled_nodes
+local function fill_node_info(up_conf, scheme, is_stream)
+    local nodes = up_conf.nodes
+    if up_conf.nodes_ref == nodes then
+        -- filled
         return true
     end
+
+    local need_filled = false
+    for _, n in ipairs(nodes) do
+        if not is_stream and not n.port then
+            if up_conf.scheme ~= scheme then
+                return nil, "Can't detect upstream's scheme. " ..
+                            "You should either specify a port in the node " ..
+                            "or specify the upstream.scheme explicitly"
+            end
+
+            need_filled = true
+        end
+
+        if not n.priority then
+            need_filled = true
+        end
+    end
+
+    up_conf.original_nodes = nodes
+
+    if not need_filled then
+        up_conf.nodes_ref = nodes
+        return true
+    end
+
+    local filled_nodes = core.table.new(#nodes, 0)
+    for i, n in ipairs(nodes) do
+        if not n.port or not n.priority then
+            filled_nodes[i] = core.table.clone(n)
+
+            if not is_stream and not n.port then
+                filled_nodes[i].port = scheme_to_port[scheme]
+            end
+
+            -- fix priority for non-array nodes and nodes from service discovery
+            if not n.priority then
+                filled_nodes[i].priority = 0
+            end
+        else
+            filled_nodes[i] = n
+        end
+    end
+
+    up_conf.nodes_ref = filled_nodes
+    up_conf.nodes = filled_nodes
+    return true
 end
 
 
@@ -421,19 +421,21 @@ local function check_upstream_conf(in_dp, conf)
         end
     end
 
-    if conf.pass_host == "node" and conf.nodes and
-        not balancer.recreate_request and core.table.nkeys(conf.nodes) ~= 1
-    then
-        return false, "only support single node for `node` mode currently"
+    if is_http then
+        if conf.pass_host == "node" and conf.nodes and
+            not balancer.recreate_request and core.table.nkeys(conf.nodes) ~= 1
+        then
+            return false, "only support single node for `node` mode currently"
+        end
+
+        if conf.pass_host == "rewrite" and
+            (conf.upstream_host == nil or conf.upstream_host == "")
+        then
+            return false, "`upstream_host` can't be empty when `pass_host` is `rewrite`"
+        end
     end
 
-    if conf.pass_host == "rewrite" and
-        (conf.upstream_host == nil or conf.upstream_host == "")
-    then
-        return false, "`upstream_host` can't be empty when `pass_host` is `rewrite`"
-    end
-
-    if conf.tls then
+    if conf.tls and conf.tls.client_cert then
         local cert = conf.tls.client_cert
         local key = conf.tls.client_key
         local ok, err = apisix_ssl.validate(cert, key)
@@ -539,6 +541,32 @@ function _M.init_worker()
         error("failed to create etcd instance for fetching upstream: " .. err)
         return
     end
+end
+
+
+function _M.get_by_id(up_id)
+    local upstream
+    local upstreams = core.config.fetch_created_obj("/upstreams")
+    if upstreams then
+        upstream = upstreams:get(tostring(up_id))
+    end
+
+    if not upstream then
+        core.log.error("failed to find upstream by id: ", up_id)
+        return nil
+    end
+
+    if upstream.has_domain then
+        local err
+        upstream, err = upstream_util.parse_domain_in_up(upstream)
+        if err then
+            core.log.error("failed to get resolved upstream: ", err)
+            return nil
+        end
+    end
+
+    core.log.info("parsed upstream: ", core.json.delay_encode(upstream, true))
+    return upstream.dns_value or upstream.value
 end
 
 

@@ -21,23 +21,13 @@ title: dubbo-proxy
 #
 -->
 
-## Summary
-
-- [**Name**](#name)
-- [**Requirement**](#requirement)
-- [**Runtime Attributes**](#runtime-attributes)
-- [**Static Attributes**](#static-attributes)
-- [**How To Enable**](#how-to-enable)
-- [**Test Plugin**](#test-plugin)
-- [**Disable Plugin**](#disable-plugin)
-
-## Name
+## Description
 
 dubbo-proxy plugin allows you proxy HTTP request to [**dubbo**](http://dubbo.apache.org).
 
 ## Requirement
 
-If you are using OpenResty, you need to build it with dubbo support, see [how to build](../how-to-build.md#step-6-build-openresty-for-apache-apisix)
+If you are using OpenResty, you need to build it with dubbo support, see [APISIX-Base](./FAQ/#how-do-i-build-the-apisix-base-environment).
 
 ## Runtime Attributes
 

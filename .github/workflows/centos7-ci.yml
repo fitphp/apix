@@ -16,15 +16,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   test_apisix:
     name: run ci on centos7
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        test_dir:
+          - t/plugin
+          - t/admin t/cli t/config-center-yaml t/control t/core t/debug t/discovery t/error_page t/misc
+          - t/node t/pubsub t/router t/script t/stream-node t/utils t/wasm t/xds-library
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -44,7 +54,7 @@ jobs:
       run: |
         export VERSION=${{ steps.branch_env.outputs.version }}
         sudo gem install --no-document fpm
-        git clone -b v2.7.0 https://github.com/api7/apisix-build-tools.git
+        git clone --depth 1 https://github.com/api7/apisix-build-tools.git
 
         # move codes under build tool
         mkdir ./apisix-build-tools/apisix
@@ -55,13 +65,22 @@ jobs:
         cd ..
         rm -rf $(ls -1 --ignore=apisix-build-tools --ignore=t --ignore=utils --ignore=ci --ignore=Makefile --ignore=rockspec)
 
-    - name: Run centos7 docker and mapping apisix into container
+    - name: Build xDS library
       run: |
-        docker run -itd -v /home/runner/work/apisix/apisix:/apisix --name centos7Instance --net="host" --dns 8.8.8.8 --dns-search apache.org docker.io/centos:7 /bin/bash
+        cd t/xds-library
+        go build -o libxds.so -buildmode=c-shared main.go
+
+    - name: Run centos7 docker and mapping apisix into container
+      env:
+        TEST_FILE_SUB_DIR: ${{ matrix.test_dir }}
+      run: |
+        docker run -itd -v /home/runner/work/apisix/apisix:/apisix --env TEST_FILE_SUB_DIR="$TEST_FILE_SUB_DIR" --name centos7Instance --net="host" --dns 8.8.8.8 --dns-search apache.org docker.io/centos:7 /bin/bash
         # docker exec centos7Instance bash -c "cp -r /tmp/apisix ./"
 
     - name: Run other docker containers for test
       run: |
+        # generating SSL certificates for Kafka
+        keytool -genkeypair -keyalg RSA -dname "CN=127.0.0.1" -alias 127.0.0.1 -keystore ./ci/pod/kafka/kafka-server/selfsigned.jks -validity 365 -keysize 2048 -storepass changeit
         make ci-env-up
         ./ci/linux-ci-init-service.sh
 

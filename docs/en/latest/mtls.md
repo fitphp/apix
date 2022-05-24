@@ -66,7 +66,7 @@ curl --cacert /data/certs/mtls_ca.crt --key /data/certs/mtls_client.key --cert /
 
 ### How to configure
 
-You need to [build APISIX-OpenResty](./how-to-build.md#step-6-build-openresty-for-apache-apisix) and configure `etcd.tls` section if you want APISIX to work on an etcd cluster with mTLS enabled.
+You need to build [APISIX-Base](./FAQ.md#how-do-i-build-the-apisix-base-environment?) and configure `etcd.tls` section if you want APISIX to work on an etcd cluster with mTLS enabled.
 
 ```yaml
 etcd:
@@ -103,7 +103,7 @@ import sys
 # sudo pip install requests
 import requests
 
-if len(sys.argv) <= 4:
+if len(sys.argv) < 4:
     print("bad argument")
     sys.exit(1)
 with open(sys.argv[1]) as f:
@@ -154,7 +154,7 @@ Sometimes the upstream requires mTLS. In this situation, the APISIX acts as the 
 
 When configuring `upstreams`, we could use parameter `tls.client_cert` and `tls.client_key` to configure the client certificate APISIX used to communicate with upstreams. Please refer to [Admin API](./admin-api.md#upstream) for details.
 
-This feature requires APISIX to run on [APISIX-OpenResty](./how-to-build.md#step-6-build-openresty-for-apache-apisix).
+This feature requires APISIX to run on [APISIX-Base](./FAQ/#how-do-i-build-the-apisix-base-environment).
 
 Here is a similar Python script to patch a existed upstream with mTLS (changes admin API url if needed):
 
@@ -166,7 +166,7 @@ import sys
 # sudo pip install requests
 import requests
 
-if len(sys.argv) <= 4:
+if len(sys.argv) < 4:
     print("bad argument")
     sys.exit(1)
 with open(sys.argv[2]) as f:

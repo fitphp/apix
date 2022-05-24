@@ -4,7 +4,11 @@ on:
   pull_request:
     branches: [master, 'release/**']
     paths:
+      - 'docs/**'
       - '**/*.md'
+
+permissions:
+  contents: read
 
 jobs:
   markdownlint:
@@ -12,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
       - name: 🚀 Use Node.js
-        uses: actions/setup-node@v2.5.1
+        uses: actions/setup-node@v3.2.0
         with:
           node-version: '12.x'
       - run: npm install -g markdownlint-cli@0.25.0
@@ -33,3 +37,17 @@ jobs:
             echo "You need to run ./utils/fix-zh-doc-segment.py to fix them."
             exit 1
           fi
+
+  Chinse-Copywriting-lint:
+    name: Chinese Copywriting
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v3
+      - name: check Chinese copywriting
+        run: |
+          version=v1.5.6
+          wget -O- "https://github.com/huacnlee/autocorrect/releases/download/$version/autocorrect-linux-amd64.tar.gz" | tar -xzv
+          mv -v autocorrect /usr/local/bin/
+          autocorrect --version
+          git ls-files -- "docs/zh/latest/**.md" | xargs -t autocorrect --lint

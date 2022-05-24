@@ -148,23 +148,12 @@ qr/apisix_bandwidth\{type="egress",route="1",service="",consumer="",node=""\} \d
                             "key": "auth-one"
                         }
                     }
-                }]],
-                [[{
-                    "node": {
-                        "value": {
-                            "username": "jack",
-                            "plugins": {
-                                "key-auth": {
-                                    "key": "auth-one"
-                                }
-                            }
-                        }
-                    },
-                    "action": "set"
                 }]]
                 )
 
-            ngx.status = code
+            if code >= 300 then
+                ngx.status = code
+            end
             ngx.say(body)
         }
     }
@@ -549,7 +538,7 @@ qr/apisix_batch_process_entries\{name="http-logger",route_id="9",server_addr="12
                                 "buffer_duration": 60,
                                 "port": 1000,
                                 "batch_max_size": 1000,
-                                "inactive_timeout": 5,
+                                "inactive_timeout": 60,
                                 "tls": false,
                                 "max_retry_count": 0
                             }
@@ -924,4 +913,4 @@ GET /hello
 --- request
 GET /apisix/prometheus/metrics
 --- response_body eval
-qr/apisix_bandwidth\{type="egress",route="1",service="1",consumer="",node="127.0.0.1"\} \d+/
+qr/apisix_bandwidth\{type="egress",route="1",service="service_name",consumer="",node="127.0.0.1"\} \d+/

@@ -42,10 +42,9 @@ The technical architecture of Apache APISIX:
 ## Community
 
 - Mailing List: Mail to dev-subscribe@apisix.apache.org, follow the reply to subscribe to the mailing list.
-- QQ Group - 578997126
-- Slack Workspace - Please [subscribe the mailing list](https://apisix.apache.org/docs/general/subscribe-guide) then ask for invitation link
+- QQ Group - 552030619, 781365357
+- Slack Workspace - join [`#apisix` channel](https://apisix.apache.org/docs/general/join/#join-the-slack-channel)
 - ![Twitter Follow](https://img.shields.io/twitter/follow/ApacheAPISIX?style=social) - follow and interact with us using hashtag `#ApacheAPISIX`
-- [bilibili video](https://space.bilibili.com/551921247)
 - **Good first issues**:
   - [Apache APISIX®](https://github.com/apache/apisix/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
   - [Apache APISIX® Ingress Controller](https://github.com/apache/apisix-ingress-controller/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -82,7 +81,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 
 - **Full Dynamic**
 
-  - [Hot Updates And Hot Plugins](docs/en/latest/architecture-design/plugin.md): Continuously updates its configurations and plugins without restarts!
+  - [Hot Updates And Hot Plugins](docs/en/latest/terminology/plugin.md): Continuously updates its configurations and plugins without restarts!
   - [Proxy Rewrite](docs/en/latest/plugins/proxy-rewrite.md): Support rewrite the `host`, `uri`, `schema`, `enable_websocket`, `headers` of the request before send to upstream.
   - [Response Rewrite](docs/en/latest/plugins/response-rewrite.md): Set customized response status code, body and header to the client.
   - Dynamic Load Balancing: Round-robin load balancing with weight.
@@ -106,10 +105,17 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 
 - **Security**
 
-  - Authentications: [key-auth](docs/en/latest/plugins/key-auth.md), [JWT](docs/en/latest/plugins/jwt-auth.md), [basic-auth](docs/en/latest/plugins/basic-auth.md), [wolf-rbac](docs/en/latest/plugins/wolf-rbac.md), [casbin](docs/en/latest/plugins/authz-casbin.md), [keycloak](docs/en/latest/plugins/authz-keycloak.md)
+  - Rich authentication & authorization support:
+    * [key-auth](docs/en/latest/plugins/key-auth.md)
+    * [JWT](docs/en/latest/plugins/jwt-auth.md)
+    * [basic-auth](docs/en/latest/plugins/basic-auth.md)
+    * [wolf-rbac](docs/en/latest/plugins/wolf-rbac.md)
+    * [casbin](docs/en/latest/plugins/authz-casbin.md)
+    * [keycloak](docs/en/latest/plugins/authz-keycloak.md)
+    * [casdoor](docs/en/latest/plugins/authz-casdoor.md)
   - [IP Whitelist/Blacklist](docs/en/latest/plugins/ip-restriction.md)
   - [Referer Whitelist/Blacklist](docs/en/latest/plugins/referer-restriction.md)
-  - [IdP](docs/en/latest/plugins/openid-connect.md): Support external authentication services, such as Auth0, okta, etc., users can use this to connect to OAuth 2.0 and other authentication methods.
+  - [IdP](docs/en/latest/plugins/openid-connect.md): Support external Identity platforms, such as Auth0, okta, etc..
   - [Limit-req](docs/en/latest/plugins/limit-req.md)
   - [Limit-count](docs/en/latest/plugins/limit-count.md)
   - [Limit-concurrency](docs/en/latest/plugins/limit-conn.md)
@@ -123,7 +129,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 
   - Zipkin tracing: [Zipkin](docs/en/latest/plugins/zipkin.md)
   - Open source APM: support [Apache SkyWalking](docs/en/latest/plugins/skywalking.md)
-  - Works with external service discovery: In addition to the built-in etcd, it also supports [Consul](docs/en/latest/discovery/consul_kv.md) and [Nacos](docs/en/latest/discovery/nacos.md), and [Eureka](docs/en/latest/discovery.md)
+  - Works with external service discovery: In addition to the built-in etcd, it also supports [Consul](docs/en/latest/discovery/consul_kv.md), [Nacos](docs/en/latest/discovery/nacos.md), [Eureka](docs/en/latest/discovery/eureka.md) and [Zookeeper (CP)](docs/en/latest/discovery/zookeeper.md).
   - Monitoring And Metrics: [Prometheus](docs/en/latest/plugins/prometheus.md)
   - Clustering: APISIX nodes are stateless, creates clustering of the configuration center, please refer to [etcd Clustering Guide](https://etcd.io/docs/v3.5/op-guide/clustering/).
   - High availability: Support to configure multiple etcd addresses in the same cluster.
@@ -131,7 +137,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
   - Version Control: Supports rollbacks of operations.
   - CLI: start\stop\reload APISIX through the command line.
   - [Stand-Alone](docs/en/latest/stand-alone.md): Supports to load route rules from local YAML file, it is more friendly such as under the kubernetes(k8s).
-  - [Global Rule](docs/en/latest/architecture-design/global-rule.md): Allows to run any plugin for all request, eg: limit rate, IP filter etc.
+  - [Global Rule](docs/en/latest/terminology/global-rule.md): Allows to run any plugin for all request, eg: limit rate, IP filter etc.
   - High performance: The single-core QPS reaches 18k with an average delay of fewer than 0.2 milliseconds.
   - [Fault Injection](docs/en/latest/plugins/fault-injection.md)
   - [REST Admin API](docs/en/latest/admin-api.md): Using the REST Admin API to control Apache APISIX, which only allows 127.0.0.1 access by default, you can modify the `allow_admin` field in `conf/config.yaml` to specify a list of IPs that are allowed to call the Admin API. Also, note that the Admin API uses key auth to verify the identity of the caller. **The `admin_key` field in `conf/config.yaml` needs to be modified before deployment to ensure security**.
@@ -143,15 +149,15 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 - **Highly scalable**
   - [Custom plugins](docs/en/latest/plugin-develop.md): Allows hooking of common phases, such as `rewrite`, `access`, `header filter`, `body filter` and `log`, also allows to hook the `balancer` stage.
   - [Plugin can be written in Java/Go/Python](docs/en/latest/external-plugin.md)
-  - [Plugin can be written with Proxy WASM SDK](docs/en/latest/wasm.md)
+  - [Plugin can be written with Proxy Wasm SDK](docs/en/latest/wasm.md)
   - Custom load balancing algorithms: You can use custom load balancing algorithms during the `balancer` phase.
   - Custom routing: Support users to implement routing algorithms themselves.
 
 - **Multi-Language support**
-  - Apache APISIX is a multi-language gateway for plugin development and provides support via `RPC` and `WASM`.
+  - Apache APISIX is a multi-language gateway for plugin development and provides support via `RPC` and `Wasm`.
   ![Multi Language Support into Apache APISIX](docs/assets/images/apisix-multi-lang-support.png)
   - The RPC way, is the current way. Developers can choose the language according to their needs and after starting an independent process with the RPC, it exchanges data with APISIX through local RPC communication. Till this moment, APISIX has support for [Java](https://github.com/apache/apisix-java-plugin-runner), [Golang](https://github.com/apache/apisix-go-plugin-runner), [Python](https://github.com/apache/apisix-python-plugin-runner) and Node.js.
-  - The WASM or WebAssembly, is an experimental way. APISIX can load and run WASM bytecode via APISIX [wasm plugin](https://github.com/apache/apisix/blob/master/docs/en/latest/wasm.md) written with the [Proxy WASM SDK](https://github.com/proxy-wasm/spec#sdks). Developers only need to write the code according to the SDK and then compile it into a WASM bytecode that runs on WASM VM with APISIX.
+  - The Wasm or WebAssembly, is an experimental way. APISIX can load and run Wasm bytecode via APISIX [wasm plugin](https://github.com/apache/apisix/blob/master/docs/en/latest/wasm.md) written with the [Proxy Wasm SDK](https://github.com/proxy-wasm/spec#sdks). Developers only need to write the code according to the SDK and then compile it into a Wasm bytecode that runs on Wasm VM with APISIX.
 
 - **Serverless**
   - [Lua functions](docs/en/latest/plugins/serverless.md): Invoke functions in each phase in APISIX.
@@ -163,11 +169,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 
 1. Installation
 
-   APISIX Installed and tested in the following systems:
-
-   CentOS 7, Ubuntu 16.04, Ubuntu 18.04, Debian 9, Debian 10, macOS, **ARM64** Ubuntu 18.04
-
-   Please refer to [install documentation](docs/en/latest/how-to-build.md).
+   Please refer to [install documentation](docs/en/latest/installation-guide.md).
 
 2. Getting started
 
@@ -182,7 +184,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 4. Plugin development
 
    You can refer to [plugin development guide](docs/en/latest/plugin-develop.md), and sample plugin `example-plugin`'s code implementation.
-   Reading [plugin concept](docs/en/latest/architecture-design/plugin.md) would help you learn more about the plugin.
+   Reading [plugin concept](docs/en/latest/terminology/plugin.md) would help you learn more about the plugin.
 
 For more documents, please refer to [Apache APISIX Documentation site](https://apisix.apache.org/docs/apisix/getting-started/)
 
@@ -190,79 +192,40 @@ For more documents, please refer to [Apache APISIX Documentation site](https://a
 
 Using AWS's eight-core server, APISIX's QPS reaches 140,000 with a latency of only 0.2 ms.
 
-[Benchmark script](benchmark/run.sh), [test method and process](https://gist.github.com/membphis/137db97a4bf64d3653aa42f3e016bd01) has been open source, welcome to try and contribute.
+[Benchmark script](benchmark/run.sh) has been open sourced, welcome to try and contribute.
 
-## Apache APISIX vs. Kong
-
-#### Both of them have been covered core features of API gateway
-
-| **Features**         | **Apache APISIX** | **KONG** |
-| :------------------- | :---------------- | :------- |
-| **Dynamic upstream** | Yes               | Yes      |
-| **Dynamic router**   | Yes               | Yes      |
-| **Health check**     | Yes               | Yes      |
-| **Dynamic SSL**      | Yes               | Yes      |
-| **L4 and L7 proxy**  | Yes               | Yes      |
-| **Opentracing**      | Yes               | Yes      |
-| **Custom plugin**    | Yes               | Yes      |
-| **REST API**         | Yes               | Yes      |
-| **CLI**              | Yes               | Yes      |
-
-#### The advantages of Apache APISIX
-
-| **Features**                                                    | **Apache APISIX**                                 | **Kong**                |
-| :-------------------------------------------------------------- | :------------------------------------------------ | :---------------------- |
-| Belongs to                                                      | Apache Software Foundation                        | Kong Inc.               |
-| Tech Architecture                                               | Nginx + etcd                                      | Nginx + Postgres        |
-| Communication channels                                          | Mail list, Wechat group, QQ group, [GitHub](https://github.com/apache/apisix/issues), [Slack](https://join.slack.com/t/the-asf/shared_invite/zt-nggtva4i-hDCsW1S35MuZ2g_2DgVDGg), meetup | GitHub, Freenode, forum |
-| Single-core CPU, QPS(enable limit-count and Prometheus plugins) | 18000                                             | 1700                    |
-| Latency                                                         | 0.2 ms                                            | 2 ms                    |
-| Dubbo                                                           | Yes                                               | No                      |
-| Configuration rollback                                          | Yes                                               | No                      |
-| Route with TTL                                                  | Yes                                               | No                      |
-| Plug-in hot loading                                             | Yes                                               | No                      |
-| Custom LB and route                                             | Yes                                               | No                      |
-| REST API <--> gRPC transcoding                                  | Yes                                               | No                      |
-| MQTT                                                            | Yes                                               | No                      |
-| Configuration effective time                                    | Event-driven, < 1ms                               | polling, 5 seconds      |
-| Dashboard                                                       | Yes                                               | No                      |
-| IdP                                                             | Yes                                               | No                      |
-| Configuration Center HA                                         | Yes                                               | No                      |
-| Speed limit for a specified time window                         | Yes                                               | No                      |
-| Support any Nginx variable as routing condition                 | Yes                                               | No                      |
-
-Benchmark comparison test [details data](https://gist.github.com/membphis/137db97a4bf64d3653aa42f3e016bd01)
-
-### Contributor Over Time
+## Contributor Over Time
 
 > [visit here](https://www.apiseven.com/contributor-graph) to generate Contributor Over Time.
 
 [![Contributor over time](https://contributor-graph-api.apiseven.com/contributors-svg?repo=apache/apisix)](https://www.apiseven.com/en/contributor-graph?repo=apache/apisix)
 
-## Videos And Articles
-
-- [Apache APISIX: How to implement plugin orchestration in API Gateway](https://www.youtube.com/watch?v=iEegNXOtEhQ)
-- [Improve Apache APISIX observability with Apache Skywalking](https://www.youtube.com/watch?v=DleVJwPs4i4)
-- [APISIX technology selection, testing and continuous integration](https://medium.com/@ming_wen/apache-apisixs-technology-selection-testing-and-continuous-integration-313221b02542)
-- [Analysis of Excellent Performance of Apache APISIX Microservices Gateway](https://medium.com/@ming_wen/analysis-of-excellent-performance-of-apache-apisix-microservices-gateway-fc77db4090b5)
-
 ## User Stories
 
-- [Sina Weibo: the road to customization of Sina Weibo API gateway based on Apache APISIX(Chinese)](https://apisix.apache.org/blog/2021/07/14/the-road-to-customization-of-Sina-Weibo-API-gateway-based-on-Apache-APISIX)
-- [European Factory Platform: API Security Gateway – Using APISIX in the eFactory Platform](https://www.efactory-project.eu/post/api-security-gateway-using-apisix-in-the-efactory-platform)
-- [ke.com: How to Build a Gateway Based on Apache APISIX(Chinese)](https://mp.weixin.qq.com/s/yZl9MWPyF1-gOyCp8plflA)
-- [360: Apache APISIX Practice in OPS Platform(Chinese)](https://mp.weixin.qq.com/s/mF8w8hW4alIMww0MSu9Sjg)
-- [HelloTalk: Exploring Globalization Based on OpenResty and Apache APISIX(Chinese)](https://www.upyun.com/opentalk/447.html)
-- [Tencent Cloud: Why choose Apache APISIX to implement the k8s ingress controller? (Chinese)](https://www.upyun.com/opentalk/448.html)
-- [aispeech: Why we create a new k8s ingress controller? (Chinese)](https://mp.weixin.qq.com/s/bmm2ibk2V7-XYneLo9XAPQ)
+- [European eFactory Platform: API Security Gateway – Using APISIX in the eFactory Platform](https://www.efactory-project.eu/post/api-security-gateway-using-apisix-in-the-efactory-platform)
+- [Copernicus Reference System Software](https://github.com/COPRS/infrastructure/wiki/Networking-trade-off)
+- [More Stories](https://apisix.apache.org/blog/tags/user-case)
 
 ## Who Uses APISIX?
 
-A wide variety of companies and organizations use APISIX for research, production and commercial product, including:
+A wide variety of companies and organizations use APISIX for research, production and commercial product, below are some of them:
 
-<img src="https://user-images.githubusercontent.com/40708551/109484046-f7c4e280-7aa5-11eb-9d71-aab90830773a.png" width="725" height="1700" />
-
-Users are encouraged to add themselves to the [Powered By](powered-by.md) page.
+- Airwallex
+- Bilibili
+- European eFactory Platform
+- European Copernicus Reference System
+- HONOR
+- iQIYI
+- NASA JPL
+- Nayuki
+- OPPO
+- QingCloud
+- Swisscom
+- Tencent Game
+- Travelsky
+- VIVO
+- weibo
+- WPS
 
 ## Landscape
 

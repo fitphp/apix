@@ -21,19 +21,11 @@ title: opentelemetry
 #
 -->
 
-## 目录
+## 描述
 
-- [名字](#名字)
-- [属性](#属性)
-- [如何启用](#如何启用)
-- [如何设置数据上报](#如何设置数据上报)
-- [禁用插件](#禁用插件)
+[OpenTelemetry](https://opentelemetry.io/) 提供符合 [OpenTelemetry specification](https://opentelemetry.io/docs/reference/specification/) 协议规范的 Tracing 数据上报。
 
-## 名字
-
-[OpenTelemetry](https://opentelemetry.io/) 提供符合 [opentelemetry specification](https://github.com/open-telemetry/opentelemetry-specification) 协议规范的 Tracing 数据上报。
-
-只支持 `HTTP` 协议，且请求类型为 `application/x-protobuf` 的数据上报，相关协议标准：[OTLP/HTTP Request](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md#otlphttp-request)。
+只支持 `HTTP` 协议，且请求类型为 `application/x-protobuf` 的数据上报，相关协议标准：[OTLP/HTTP Request](https://opentelemetry.io/docs/reference/specification/protocol/otlp/#otlphttp-request).
 
 ## 属性
 
@@ -63,7 +55,7 @@ plugins:
 
 然后重载 APISIX。
 
-下面是一个示例，在指定的 route 上开启了 opentelemetry 插件:
+下面是一个示例，在指定的 route 上开启了 opentelemetry 插件：
 
 ```shell
 curl http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
@@ -74,8 +66,8 @@ curl http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f1
     ],
     "plugins": {
         "opentelemetry": {
-            sampler": {
-                "name": "always_on",
+            "sampler": {
+                "name": "always_on"
             }
         }
     },
@@ -96,8 +88,8 @@ curl http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f1
 | ------------ | ------ | -------- | ----------------------------------------------------- |
 | trace_id_source | enum | random | 合法的取值：`random` 或 `x-request-id`，允许使用当前请求 ID 代替随机 ID 作为新的 TraceID，必须确保当前请求 ID 是符合 TraceID 规范的：`[0-9a-f]{32}` |
 | resource | object |   | 追加到 trace 的额外 [resource](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md) |
-| collector | object | {address = "127.0.0.1:4317", request_timeout = 3} | 数据采集服务 |
-| collector.address | string | 127.0.0.1:4317 | 数据采集服务地址 |
+| collector | object | {address = "127.0.0.1:4318", request_timeout = 3} | 数据采集服务 |
+| collector.address | string | 127.0.0.1:4318 | 数据采集服务地址 |
 | collector.request_timeout | integer | 3 | 数据采集服务上报请求超时时长，单位秒 |
 | collector.request_headers | object |  | 数据采集服务上报请求附加的 HTTP 请求头 |
 | batch_span_processor | object |  | trace span 处理器参数配置 |
@@ -107,7 +99,7 @@ curl http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f1
 | batch_span_processor.max_export_batch_size | integer | 256 | 一批 span 的数量，每次上报的 span 数量 |
 | batch_span_processor.inactive_timeout | number | 2 | 每隔多长时间检查是否有一批 span 可以上报，单位秒 |
 
-配置示例:
+配置示例：
 
 ```yaml
 plugin_attr:
@@ -116,7 +108,7 @@ plugin_attr:
       service.name: APISIX
       tenant.id: business_id
     collector:
-      address: 192.168.8.211:4317
+      address: 192.168.8.211:4318
       request_timeout: 3
       request_headers:
         foo: bar
@@ -132,7 +124,7 @@ plugin_attr:
 
 当你想禁用一条路由/服务上的 opentelemetry 插件的时候，很简单，在插件的配置中把对应的 JSON 配置删除即可，无须重启服务，即刻生效：
 
-```shell
+```console
 $ curl http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "methods": ["GET"],

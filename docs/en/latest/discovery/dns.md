@@ -21,9 +21,6 @@ title: DNS
 #
 -->
 
-* [service discovery via DNS](#service-discovery-via-dns)
-    * [SRV record](#srv-record)
-
 ## service discovery via DNS
 
 Some service discovery system, like Consul, support exposing service information
@@ -138,3 +135,6 @@ being selected.
 
 We treat weight 0 record has a weight of 1 so the node "have a very small chance of
 being selected", which is also the common way to treat this type of record.
+
+For SRV record which has port 0, we will fallback to use the upstream protocol's default port.
+You can also specify the port in the "service_name" field directly, like "srv.blah.service:8848".

@@ -31,6 +31,7 @@ master_on();
 my $apisix_home = $ENV{APISIX_HOME} || cwd();
 my $nginx_binary = $ENV{'TEST_NGINX_BINARY'} || 'nginx';
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
+$ENV{TEST_NGINX_FAST_SHUTDOWN} ||= 1;
 
 sub read_file($) {
     my $infile = shift;
@@ -108,20 +109,6 @@ etcd:
   password: 5tHkHhYkjr6cQY
 _EOC_
 }
-
-my $custom_hmac_auth = $ENV{"CUSTOM_HMAC_AUTH"} || "false";
-if ($custom_hmac_auth eq "true") {
-    $user_yaml_config .= <<_EOC_;
-plugin_attr:
-  hmac-auth:
-    signature_key: X-APISIX-HMAC-SIGNATURE
-    algorithm_key: X-APISIX-HMAC-ALGORITHM
-    date_key: X-APISIX-DATE
-    access_key: X-APISIX-HMAC-ACCESS-KEY
-    signed_headers_key: X-APISIX-HMAC-SIGNED-HEADERS
-_EOC_
-}
-
 
 my $profile = $ENV{"APISIX_PROFILE"};
 
@@ -217,6 +204,14 @@ if ($version =~ m/\/apisix-nginx-module/) {
 _EOC_
 }
 
+my $a6_ngx_vars = "";
+if ($version =~ m/\/apisix-nginx-module/) {
+    $a6_ngx_vars = <<_EOC_;
+    set \$wasm_process_req_body       '';
+    set \$wasm_process_resp_body      '';
+_EOC_
+}
+
 add_block_preprocessor(sub {
     my ($block) = @_;
     my $wait_etcd_sync = $block->wait_etcd_sync // 0.1;
@@ -230,8 +225,8 @@ apisix:
 _EOC_
     }
 
-    my $lua_deps_path = <<_EOC_;
-    lua_package_path "$apisix_home/?.lua;$apisix_home/?/init.lua;$apisix_home/deps/share/lua/5.1/?/init.lua;$apisix_home/deps/share/lua/5.1/?.lua;$apisix_home/apisix/?.lua;$apisix_home/t/?.lua;;";
+    my $lua_deps_path = $block->lua_deps_path // <<_EOC_;
+    lua_package_path "$apisix_home/?.lua;$apisix_home/?/init.lua;$apisix_home/deps/share/lua/5.1/?/init.lua;$apisix_home/deps/share/lua/5.1/?.lua;$apisix_home/apisix/?.lua;$apisix_home/t/?.lua;$apisix_home/t/xrpc/?.lua;$apisix_home/t/xrpc/?/init.lua;;";
     lua_package_cpath "$apisix_home/?.so;$apisix_home/deps/lib/lua/5.1/?.so;$apisix_home/deps/lib64/lua/5.1/?.so;;";
 _EOC_
 
@@ -381,9 +376,12 @@ _EOC_
         apisix.stream_init(args)
 _EOC_
 
+    my $stream_extra_init_by_lua = $block->stream_extra_init_by_lua // "";
+
     $stream_config .= <<_EOC_;
     init_by_lua_block {
         $stream_init_by_lua_block
+        $stream_extra_init_by_lua
     }
     init_worker_by_lua_block {
         apisix.stream_init_worker()
@@ -498,6 +496,10 @@ _EOC_
     lua_capture_error_log 1m;    # plugin error-log-logger
     lua_shared_dict etcd-cluster-health-check 10m; # etcd health check
     lua_shared_dict ext-plugin 1m;
+    lua_shared_dict kubernetes 1m;
+    lua_shared_dict tars 1m;
+    lua_shared_dict xds-config 1m;
+    lua_shared_dict xds-config-version 1m;
 
     proxy_ssl_name \$upstream_host;
     proxy_ssl_server_name on;
@@ -700,7 +702,7 @@ _EOC_
         }
 
         location / {
-            set \$upstream_mirror_host        '';
+            set \$upstream_mirror_uri         '';
             set \$upstream_upgrade            '';
             set \$upstream_connection         '';
 
@@ -714,6 +716,7 @@ _EOC_
             set \$upstream_cache_key             '';
             set \$upstream_cache_bypass          '';
             set \$upstream_no_cache              '';
+            $a6_ngx_vars
 
             proxy_cache                         \$upstream_cache_zone;
             proxy_cache_valid                   any 10s;
@@ -785,7 +788,7 @@ _EOC_
 
     if ($version !~ m/\/apisix-nginx-module/) {
         $config .= <<_EOC_;
-            if (\$upstream_mirror_host = "") {
+            if (\$upstream_mirror_uri = "") {
                 return 200;
             }
 _EOC_
@@ -794,7 +797,7 @@ _EOC_
     $config .= <<_EOC_;
             proxy_http_version 1.1;
             proxy_set_header Host \$upstream_host;
-            proxy_pass \$upstream_mirror_host\$request_uri;
+            proxy_pass \$upstream_mirror_uri;
         }
 _EOC_
 

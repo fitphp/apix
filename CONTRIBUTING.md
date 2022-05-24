@@ -58,6 +58,18 @@ Once we've discussed your changes and you've got your code ready, make sure that
 
     - npm based [markdownlint-cli](https://www.npmjs.com/package/markdownlint-cli)
 
+    For linting all files' license header we use:
+
+    - [license-eye](https://github.com/apache/skywalking-eyes)
+
+    For linting our shell files we use:
+
+    - [shellcheck](https://github.com/koalaman/shellcheck)
+
+    For linting our zh document files we use:
+
+    - [autocorrect](https://github.com/huacnlee/autocorrect)
+
 * Active Voice
 
     In general, use active voice when formulating the sentence instead of passive voice. A sentence written in the active voice will emphasize
@@ -137,5 +149,5 @@ If you have contributed to Apache APISIX, no matter it is a code contribution to
 
 ## Do you have questions about the source code?
 
-- **QQ Group**: 578997126(recommended), 552030619
+- **QQ Group**: 781365357(recommended), 578997126, 552030619
 - Join in `apisix` channel at [Apache Slack](http://s.apache.org/slack-invite). If the link is not working, find the latest one at [Apache INFRA WIKI](https://cwiki.apache.org/confluence/display/INFRA/Slack+Guest+Invites).

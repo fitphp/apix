@@ -55,7 +55,7 @@ title: 路由 RadixTree
 
 完全匹配 -> 深度前缀匹配
 
-以下是规则:
+以下是规则：
 
 ```text
 /blog/foo/*
@@ -110,7 +110,7 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/2 -H 'X-API-KEY: edd1c9f034335f
 }'
 ```
 
-测试:
+测试：
 
 ```shell
 curl http://127.0.0.1:1980/hello
@@ -151,7 +151,7 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/2 -H 'X-API-KEY: edd1c9f034335f
 }'
 ```
 
-测试:
+测试：
 
 ```shell
 $ curl http://127.0.0.1:9080/hello -H 'host: localhost.com'
@@ -168,7 +168,7 @@ $ curl http://127.0.0.1:9080/hello
 {"error_msg":"404 Route Not Found"}
 ```
 
-`host` 规则匹配，请求命中对应的上游，`host` 不匹配，请求返回404消息。
+`host` 规则匹配，请求命中对应的上游，`host` 不匹配，请求返回 404 消息。
 
 #### 5. 参数匹配
 
@@ -194,7 +194,7 @@ apisix:
 
 ### 如何通过 Nginx 内置变量过滤路由
 
-具体参数及使用方式请查看 [radixtree#new](https://github.com/api7/lua-resty-radixtree#new) 文档，下面是一个简单的示例:
+具体参数及使用方式请查看 [radixtree#new](https://github.com/api7/lua-resty-radixtree#new) 文档，下面是一个简单的示例：
 
 ```shell
 $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
@@ -246,6 +246,8 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f
 
 ### 如何通过 GraphQL 属性过滤路由
 
+目前，APISIX 可以处理 HTTP GET 和 POST 方法。请求体正文可以是 GraphQL 查询字符串，也可以是 JSON 格式的内容。
+
 APISIX 支持通过 GraphQL 的一些属性过滤路由。 目前我们支持：
 
 * graphql_operation
@@ -274,8 +276,8 @@ query getRepo {
 ```shell
 $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
 {
-    "methods": ["POST"],
-    "uri": "/_graphql",
+    "methods": ["POST", "GET"],
+    "uri": "/graphql",
     "vars": [
         ["graphql_operation", "==", "query"],
         ["graphql_name", "==", "getRepo"],
@@ -288,6 +290,36 @@ $ curl http://127.0.0.1:9080/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f
         }
     }
 }'
+```
+
+我们可以通过以下三种方式分别去验证 GraphQL 匹配：
+
+1. 使用 GraphQL 查询字符串
+
+```shell
+$ curl -H 'content-type: application/graphql' -X POST http://127.0.0.1:9080/graphql -d '
+query getRepo {
+    owner {
+        name
+    }
+    repo {
+        created
+    }
+}'
+```
+
+2. 使用 JSON 格式
+
+```shell
+$ curl -H 'content-type: application/json' -X POST \
+http://127.0.0.1:9080/graphql --data '{"query": "query getRepo { owner {name } repo {created}}"}'
+```
+
+3. 尝试 `GET` 请求
+
+```shell
+$ curl -H 'content-type: application/graphql' -X GET \
+"http://127.0.0.1:9080/graphql?query=query getRepo { owner {name } repo {created}}" -g
 ```
 
 为了防止花费太多时间读取无效的 `GraphQL` 请求正文，我们只读取前 `1 MiB`

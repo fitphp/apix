@@ -90,23 +90,12 @@ done
                             "user_dn": "cn=user01,ou=users,dc=example,dc=org"
                         }
                     }
-                }]],
-                [[{
-                    "node": {
-                        "value": {
-                            "username": "user01",
-                            "plugins": {
-                                "ldap-auth": {
-                                    "user_dn": "cn=user01,ou=users,dc=example,dc=org"
-                                }
-                            }
-                        }
-                    },
-                    "action": "set"
                 }]]
                 )
 
-            ngx.status = code
+            if code >= 300 then
+                ngx.status = code
+            end
             ngx.say(body)
         }
     }
@@ -167,9 +156,11 @@ GET /hello
 Authorization: Bad_header Zm9vOmZvbwo=
 --- error_code: 401
 --- response_body
-{"message":"Invalid authorization header format"}
---- no_error_log
-[error]
+{"message":"Invalid authorization in request"}
+--- grep_error_log eval
+qr/Invalid authorization header format/
+--- grep_error_log_out
+Invalid authorization header format
 
 
 
@@ -180,9 +171,11 @@ GET /hello
 Authorization: Basic aca_a
 --- error_code: 401
 --- response_body
-{"message":"Failed to decode authentication header: aca_a"}
---- no_error_log
-[error]
+{"message":"Invalid authorization in request"}
+--- grep_error_log eval
+qr/Failed to decode authentication header: aca_a/
+--- grep_error_log_out
+Failed to decode authentication header: aca_a
 
 
 
@@ -193,9 +186,11 @@ GET /hello
 Authorization: Basic Zm9v
 --- error_code: 401
 --- response_body
-{"message":"Split authorization err: invalid decoded data: foo"}
---- no_error_log
-[error]
+{"message":"Invalid authorization in request"}
+--- grep_error_log eval
+qr/Split authorization err: invalid decoded data: foo/
+--- grep_error_log_out
+Split authorization err: invalid decoded data: foo
 
 
 

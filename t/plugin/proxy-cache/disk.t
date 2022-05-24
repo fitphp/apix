@@ -87,32 +87,6 @@ __DATA__
                             "type": "roundrobin"
                         },
                         "uri": "/hello"
-                   }]],
-                   [[{
-                       "node": {
-                        "value": {
-                            "uri": "/hello",
-                            "upstream": {
-                                "nodes": {
-                                    "127.0.0.1:1980": 1
-                                },
-                                "type": "roundrobin"
-                            },
-                            "plugins": {
-                                "proxy-cache":{
-                                    "cache_zone":"disk_cache_one",
-                                    "hide_cache_headers":true,
-                                    "cache_bypass":["$arg_bypass"],
-                                    "cache_key":["$host","$request_uri"],
-                                    "no_cache":["$arg_no_cache"],
-                                    "cache_http_status":[200],
-                                    "cache_method":["GET"]
-                                }
-                            }
-                        },
-                        "key": "/apisix/routes/1"
-                        },
-                        "action": "set"
                    }]]
                    )
 
@@ -477,21 +451,22 @@ Apisix-Cache-Status: MISS
 
 
 
-=== TEST 17: hit route (HEAD method)
+=== TEST 17: hit route (will be cached)
 --- request
-HEAD /hello-world
+GET /hello
+--- response_body chop
+hello world!
+--- response_headers
+Apisix-Cache-Status: HIT
+
+
+
+=== TEST 18: hit route (HEAD method mismatch cache_method)
+--- request
+HEAD /hello
 --- error_code: 200
 --- response_headers
-Apisix-Cache-Status: MISS
-
-
-
-=== TEST 18: hit route (HEAD method there's no cache)
---- request
-HEAD /hello-world
---- error_code: 200
---- response_headers
-Apisix-Cache-Status: MISS
+Apisix-Cache-Status: BYPASS
 
 
 

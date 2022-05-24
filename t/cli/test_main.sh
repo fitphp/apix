@@ -706,6 +706,30 @@ fi
 ./bin/apisix stop
 echo "pass: ignore stale nginx.pid"
 
+# check no corresponding process
+make run
+oldpid=$(< logs/nginx.pid)
+make stop
+sleep 0.5
+echo $oldpid > logs/nginx.pid
+out=$(make run || true)
+if ! echo "$out" | grep "nginx.pid exists but there's no corresponding process with pid"; then
+    echo "failed: should find no corresponding process"
+    exit 1
+fi
+make stop
+echo "pass: no corresponding process"
+
+# check running when run repeatedly
+out=$(make run; make run || true)
+if ! echo "$out" | grep "APISIX is running"; then
+    echo "failed: should find APISIX running"
+    exit 1
+fi
+
+make stop
+echo "pass: check APISIX running"
+
 # check the keepalive related parameter settings in the upstream
 git checkout conf/config.yaml
 
@@ -929,11 +953,6 @@ fi
 
 if ! grep "plugin-limit-count-redis-cluster-slot-lock 2m;" conf/nginx.conf > /dev/null; then
     echo "failed: 'plugin-limit-count-redis-cluster-slot-lock 2m;' not in nginx.conf"
-    exit 1
-fi
-
-if ! grep "tracing_buffer 20m;" conf/nginx.conf > /dev/null; then
-    echo "failed: 'tracing_buffer 20m;' not in nginx.conf"
     exit 1
 fi
 

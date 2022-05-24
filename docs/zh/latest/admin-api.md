@@ -21,23 +21,9 @@ title: Admin API
 #
 -->
 
-## 目录
+## 描述
 
-- [Description](#description)
-- [Route](#route)
-- [Service](#service)
-- [Consumer](#consumer)
-- [Upstream](#upstream)
-- [SSL](#ssl)
-- [Global Rule](#global-rule)
-- [Plugin Config](#plugin-config)
-- [Plugin Metadata](#plugin-metadata)
-- [Plugin](#plugin)
-- [Stream Route](#stream-route)
-
-## Description
-
-Admin API 是为 Apache APISIX 服务的一组 API，我们可以将参数传递给 Admin API 以控制 APISIX 节点。更好地了解其工作原理，请参阅 [architecture-design](./architecture-design/apisix.md) 中的文档。
+Admin API 是为 Apache APISIX 服务的一组 API，我们可以将参数传递给 Admin API 以控制 APISIX 节点。更好地了解其工作原理，请参阅 [Architecture Design](./architecture-design/apisix.md) 中的文档。
 
 启动 Apache APISIX 时，默认情况下 Admin API 将监听 `9080` 端口（HTTPS 的 `9443` 端口）。您可以通过修改 [conf/config.yaml](https://github.com/apache/apisix/blob/master/conf/config.yaml) 文件来改变默认监听的端口。
 
@@ -71,32 +57,32 @@ Admin API 是为 Apache APISIX 服务的一组 API，我们可以将参数传递
 
 ### body 请求参数
 
-| 名字             | 可选项                              | 类型     | 说明                                                                                                                                                                                                                                                                                                                                                       | 示例                                                 |
-| ---------------- | ---------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| uri              | 必选，不能与 `uris` 一起使用          | 匹配规则 | 除了如 `/foo/bar`、`/foo/gloo` 这种全量匹配外，使用不同 [Router](architecture-design/router.md) 还允许更高级匹配，更多见 [Router](architecture-design/router.md)。                                                                                                                                                                                         | "/hello"                                             |
-| uris             | 必选，不能与 `uri` 一起使用           | 匹配规则 | 非空数组形式，可以匹配多个 `uri`                                                                                                                                                                                                                                                                                                                           | ["/hello", "/world"]                                 |
-| plugins          | 可选                               | Plugin   | 详见 [Plugin](architecture-design/plugin.md)                                                                                                                                                                                                                                                                                                               |                                                      |
-| script           | 可选                               | Script   | 详见 [Script](architecture-design/script.md)                                                                                                                                                                                                                                                                                                               |                                                      |
-| upstream         | 可选                               | Upstream | 启用的 Upstream 配置，详见 [Upstream](architecture-design/upstream.md)                                                                                                                                                                                                                                                                                     |                                                      |
-| upstream_id      | 可选                               | Upstream | 启用的 upstream id，详见 [Upstream](architecture-design/upstream.md)                                                                                                                                                                                                                                                                                       |                                                      |
-| service_id       | 可选                               | Service  | 绑定的 Service 配置，详见 [Service](architecture-design/service.md)                                                                                                                                                                                                                                                                                        |                                                      |
-| plugin_config_id | 可选，无法跟 script 一起配置          | Plugin   | 绑定的 Plugin config 配置，详见 [Plugin config](architecture-design/plugin-config.md)                                                                                                                                                                                                                                                                      |                                                      |
-| name             | 可选                               | 辅助     | 标识路由名称                                                                                                                                                                                                                                                                                                                                               | route-xxxx                                           |
-| desc             | 可选                               | 辅助     | 标识描述、使用场景等。                                                                                                                                                                                                                                                                                                                                     | 路由 xxxx                                            |
-| host             | 可选，不能与 `hosts` 一起使用         | 匹配规则 | 当前请求域名，比如 `foo.com`；也支持泛域名，比如 `*.foo.com`。                                                                                                                                                                                                                                                                                             | "foo.com"                                            |
-| hosts            | 可选，不能与 `host` 一起使用          | 匹配规则 | 非空列表形态的 `host`，表示允许有多个不同 `host`，匹配其中任意一个即可。                                                                                                                                                                                                                                                                                   | ["foo.com", "\*.bar.com"]                            |
-| remote_addr      | 可选，不能与 `remote_addrs` 一起使用  | 匹配规则 | 客户端请求 IP 地址: `192.168.1.101`、`192.168.1.102` 以及 CIDR 格式的支持 `192.168.1.0/24`。特别的，APISIX 也完整支持 IPv6 地址匹配：`::1`，`fe80::1`, `fe80::1/64` 等。                                                                                                                                                                                   | "192.168.1.0/24"                                     |
-| remote_addrs     | 可选，不能与 `remote_addr` 一起使用   | 匹配规则 | 非空列表形态的 `remote_addr`，表示允许有多个不同 IP 地址，符合其中任意一个即可。                                                                                                                                                                                                                                                                           | ["127.0.0.1", "192.0.0.0/8", "::1"]                  |
-| methods          | 可选                               | 匹配规则 | 如果为空或没有该选项，代表没有任何 `method` 限制，也可以是一个或多个的组合：`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`，`CONNECT`，`TRACE`。                                                                                                                                                                                               | ["GET", "POST"]                                      |
-| priority         | 可选                               | 匹配规则 | 如果不同路由包含相同 `uri`，根据属性 `priority` 确定哪个 `route` 被优先匹配，值越大优先级越高，默认值为 0。                                                                                                                                                                                                                                                | priority = 10                                        |
+| 名字             | 可选项                              | 类型     | 说明                                                                                                                                                                                                                                                                                    | 示例                                                 |
+| ---------------- | ---------------------------------- | -------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------------------------------------------------- |
+| uri              | 必选，不能与 `uris` 一起使用          | 匹配规则 | 除了如 `/foo/bar`、`/foo/gloo` 这种全量匹配外，使用不同 [Router](terminology/router.md) 还允许更高级匹配，更多见 [Router](terminology/router.md)。                                                                                                                                                 | "/hello"                                             |
+| uris             | 必选，不能与 `uri` 一起使用           | 匹配规则 | 非空数组形式，可以匹配多个 `uri`                                                                                                                                                                                                                                                                   | ["/hello", "/world"]                                 |
+| plugins          | 可选                               | Plugin   | 详见 [Plugin](terminology/plugin.md)                                                                                                                                                                                                                                            |                                                      |
+| script           | 可选                               | Script   | 详见 [Script](terminology/script.md)                                                                                                                                                                                                                                            |                                                      |
+| upstream         | 可选                               | Upstream | 启用的 Upstream 配置，详见 [Upstream](terminology/upstream.md)                                                                                                                                                                                                                        |                                                      |
+| upstream_id      | 可选                               | Upstream | 启用的 upstream id，详见 [Upstream](terminology/upstream.md)                                                                                                                                                                                                                        |                                                      |
+| service_id       | 可选                               | Service  | 绑定的 Service 配置，详见 [Service](terminology/service.md)                                                                                                                                                                                                                           |                                                      |
+| plugin_config_id | 可选，无法跟 script 一起配置          | Plugin   | 绑定的 Plugin config 配置，详见 [Plugin config](terminology/plugin-config.md)                                                                                                                                                                                                         |                                                      |
+| name             | 可选                               | 辅助     | 标识路由名称                                                                                                                                                                                                                                                                                | route-xxxx                                           |
+| desc             | 可选                               | 辅助     | 标识描述、使用场景等。                                                                                                                                                                                                                                                                           | 路由 xxxx                                            |
+| host             | 可选，不能与 `hosts` 一起使用         | 匹配规则 | 当前请求域名，比如 `foo.com`；也支持泛域名，比如 `*.foo.com`。                                                                                                                                                                                                                                            | "foo.com"                                            |
+| hosts            | 可选，不能与 `host` 一起使用          | 匹配规则 | 非空列表形态的 `host`，表示允许有多个不同 `host`，匹配其中任意一个即可。                                                                                                                                                                                                                                           | ["foo.com", "\*.bar.com"]                            |
+| remote_addr      | 可选，不能与 `remote_addrs` 一起使用  | 匹配规则 | 客户端请求 IP 地址：`192.168.1.101`、`192.168.1.102` 以及 CIDR 格式的支持 `192.168.1.0/24`。特别的，APISIX 也完整支持 IPv6 地址匹配：`::1`，`fe80::1`，`fe80::1/64` 等。                                                                                                                                                 | "192.168.1.0/24"                                     |
+| remote_addrs     | 可选，不能与 `remote_addr` 一起使用   | 匹配规则 | 非空列表形态的 `remote_addr`，表示允许有多个不同 IP 地址，符合其中任意一个即可。                                                                                                                                                                                                                                     | ["127.0.0.1", "192.0.0.0/8", "::1"]                  |
+| methods          | 可选                               | 匹配规则 | 如果为空或没有该选项，代表没有任何 `method` 限制，也可以是一个或多个的组合：`GET`，`POST`，`PUT`，`DELETE`，`PATCH`，`HEAD`，`OPTIONS`，`CONNECT`，`TRACE`，`PURGE`。                                                                                                                                                                    | ["GET", "POST"]                                      |
+| priority         | 可选                               | 匹配规则 | 如果不同路由包含相同 `uri`，根据属性 `priority` 确定哪个 `route` 被优先匹配，值越大优先级越高，默认值为 0。                                                                                                                                                                                                                  | priority = 10                                        |
 | vars             | 可选                               | 匹配规则 | 由一个或多个`[var, operator, val]`元素组成的列表，类似这样：`[[var, operator, val], [var, operator, val], ...]]`。例如：`["arg_name", "==", "json"]`，表示当前请求参数 `name` 是 `json`。这里的 `var` 与 Nginx 内部自身变量命名是保持一致，所以也可以使用 `request_uri`、`host` 等。更多细节请参考[lua-resty-expr](https://github.com/api7/lua-resty-expr) | [["arg_name", "==", "json"], ["arg_age", ">", 18]]   |
-| filter_func      | 可选                               | 匹配规则 | 用户自定义的过滤函数。可以使用它来实现特殊场景的匹配要求实现。该函数默认接受一个名为 vars 的输入参数，可以用它来获取 Nginx 变量。                                                                                                                                                                                                                          | function(vars) return vars["arg_name"] == "json" end |
-| labels           | 可选                               | 匹配规则 | 标识附加属性的键值对                                                                                                                                                                                                                                                                                                                                       | {"version":"v2","build":"16","env":"production"}     |
-| timeout          | 可选                               | 辅助     | 为 route 设置 upstream 的连接、发送消息、接收消息的超时时间。这个配置将会覆盖在 upstream 中 配置的 [timeout](#upstream) 选项                                                                                                                                                                        | {"connect": 3, "send": 3, "read": 3}              |
-| enable_websocket | 可选                               | 辅助     | 是否启用 `websocket`(boolean), 缺省 `false`.                                                                                                                                                                                                                                                                                                               |                                                      |
-| status           | 可选                               | 辅助     | 是否启用此路由, 缺省 `1`。                                                                                                                                                                                                                                                                                                                                 | `1` 表示启用，`0` 表示禁用                           |
-| create_time      | 可选                               | 辅助     | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                                                                                                                                                                                                                                                                              | 1602883670                                           |
-| update_time      | 可选                               | 辅助     | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                                                                                                                                                                                                                                                                              | 1602883670                                           |
+| filter_func      | 可选                               | 匹配规则 | 用户自定义的过滤函数。可以使用它来实现特殊场景的匹配要求实现。该函数默认接受一个名为 vars 的输入参数，可以用它来获取 Nginx 变量。                                                                                                                                                                                                               | function(vars) return vars["arg_name"] == "json" end |
+| labels           | 可选                               | 匹配规则 | 标识附加属性的键值对                                                                                                                                                                                                                                                                            | {"version":"v2","build":"16","env":"production"}     |
+| timeout          | 可选                               | 辅助     | 为 route 设置 upstream 的连接、发送消息、接收消息的超时时间（单位为秒）。这个配置将会覆盖在 upstream 中 配置的 [timeout](#upstream) 选项                                                                                                                                                                                               | {"connect": 3, "send": 3, "read": 3}              |
+| enable_websocket | 可选                               | 辅助     | 是否启用 `websocket`(boolean), 缺省 `false`。                                                                                                                                                                                                                                                |                                                      |
+| status           | 可选                               | 辅助     | 是否启用此路由，缺省 `1`。                                                                                                                                                                                                                                                                       | `1` 表示启用，`0` 表示禁用                           |
+| create_time      | 可选                               | 辅助     | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                                                                                                                                                                                                                            | 1602883670                                           |
+| update_time      | 可选                               | 辅助     | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                                                                                                                                                                                                                            | 1602883670                                           |
 
 有两点需要特别注意：
 
@@ -107,24 +93,24 @@ route 对象 json 配置内容：
 
 ```shell
 {
-    "id": "1",                  # id，非必填
-    "uris": ["/a","/b"],        # 一组 URL 路径
-    "methods": ["GET","POST"],  # 可以填多个方法
-    "hosts": ["a.com","b.com"], # 一组 host 域名
-    "plugins": {},              # 指定 route 绑定的插件
-    "priority": 0,              # apisix 支持多种匹配方式，可能会在一次匹配中同时匹配到多条路由，此时优先级高的优先匹配中
-    "name": "路由xxx",
+    "id": "1",                            # id，非必填
+    "uris": ["/a","/b"],                  # 一组 URL 路径
+    "methods": ["GET","POST"],            # 可以填多个方法
+    "hosts": ["a.com","b.com"],           # 一组 host 域名
+    "plugins": {},                        # 指定 route 绑定的插件
+    "priority": 0,                        # apisix 支持多种匹配方式，可能会在一次匹配中同时匹配到多条路由，此时优先级高的优先匹配中
+    "name": "路由 xxx",
     "desc": "hello world",
-    "remote_addrs": ["127.0.0.1"],  # 一组客户端请求 IP 地址
+    "remote_addrs": ["127.0.0.1"],        # 一组客户端请求 IP 地址
     "vars": [["http_user", "==", "ios"]], # 由一个或多个 [var, operator, val] 元素组成的列表
-    "upstream_id": "1",         # upstream 对象在 etcd 中的 id ，建议使用此值
-    "upstream": {},             # upstream 信息对象，建议尽量不要使用
-    "timeout": {                # 为 route 设置 upstream 的连接、发送消息、接收消息的超时时间。
+    "upstream_id": "1",                   # upstream 对象在 etcd 中的 id ，建议使用此值
+    "upstream": {},                       # upstream 信息对象，建议尽量不要使用
+    "timeout": {                          # 为 route 设置 upstream 的连接、发送消息、接收消息的超时时间。
         "connect": 3,
         "send": 3,
         "read": 3
     },
-    "filter_func": "",          # 用户自定义的过滤函数，非必填
+    "filter_func": "",                    # 用户自定义的过滤函数，非必填
 }
 ```
 
@@ -317,9 +303,9 @@ HTTP/1.1 200 OK
 
 | 名字             | 可选项                             | 类型     | 说明                                                                   | 示例                                             |
 | ---------------- | ---------------------------------- | -------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
-| plugins          | 可选                               | Plugin   | 详见 [Plugin](architecture-design/plugin.md)                           |                                                  |
-| upstream         | upstream 或 upstream_id 两个选一个 | Upstream | 启用的 Upstream 配置，详见 [Upstream](architecture-design/upstream.md) |                                                  |
-| upstream_id      | upstream 或 upstream_id 两个选一个 | Upstream | 启用的 upstream id，详见 [Upstream](architecture-design/upstream.md)   |                                                  |
+| plugins          | 可选                               | Plugin   | 详见 [Plugin](terminology/plugin.md)                           |                                                  |
+| upstream         | upstream 或 upstream_id 两个选一个 | Upstream | 启用的 Upstream 配置，详见 [Upstream](terminology/upstream.md) |                                                  |
+| upstream_id      | upstream 或 upstream_id 两个选一个 | Upstream | 启用的 upstream id，详见 [Upstream](terminology/upstream.md)   |                                                  |
 | name             | 可选                               | 辅助     | 标识服务名称。                                                         |                                             |
 | desc             | 可选                               | 辅助     | 服务描述、使用场景等。                                                 |                                                  |
 | labels           | 可选                               | 匹配规则 | 标识附加属性的键值对                                                   | {"version":"v2","build":"16","env":"production"} |
@@ -330,15 +316,15 @@ HTTP/1.1 200 OK
 
 service 对象 json 配置内容：
 
-```json
+```shell
 {
-    "id": "1",              # id
-    "plugins": {},          # 指定 service 绑定的插件
-    "upstream_id": "1",     # upstream 对象在 etcd 中的 id ，建议使用此值
-    "upstream": {},         # upstream 信息对象，不建议使用
-    "name": "测试svc",  # service 名称
-    "desc": "hello world",  # service 描述
-    "enable_websocket": true, #启动 websocket 功能
+    "id": "1",                # id
+    "plugins": {},            # 指定 service 绑定的插件
+    "upstream_id": "1",       # upstream 对象在 etcd 中的 id ，建议使用此值
+    "upstream": {},           # upstream 信息对象，不建议使用
+    "name": "test svc",       # service 名称
+    "desc": "hello world",    # service 描述
+    "enable_websocket": true, # 启动 websocket 功能
     "hosts": ["foo.com"]
 }
 ```
@@ -346,7 +332,7 @@ service 对象 json 配置内容：
 具体示例：
 
 ```shell
-# 创建一个Service
+# 创建一个 Service
 $ curl http://127.0.0.1:9080/apisix/admin/services/201  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
 {
     "plugins": {
@@ -546,14 +532,14 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 | 名字           | 可选项                             | 类型           | 说明                                                                                                                                                                                                                                                                                                                                                        | 示例                                             |
 | -------------- | ---------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | type           | 必需                               | 枚举           | 负载均衡算法                                                                                                                                                                                                                                                                                                                                                            |                                      |     |
-| nodes          | 必需，不能和 `service_name` 一起用 | Node           | 哈希表或数组。当它是哈希表时，内部元素的 key 是上游机器地址列表，格式为`地址 + （可选的）端口`，其中地址部分可以是 IP 也可以是域名，比如 `192.168.1.100:80`、`foo.com:80`等。value 则是节点的权重。当它是数组时，数组中每个元素都是一个哈希表，其中包含 `host`、`weight` 以及可选的 `port`、`priority`。`nodes` 可以为空，这通常用作占位符。客户端命中这样的上游会返回 502。                                        | `192.168.1.100:80`                               |
+| nodes          | 必需，不能和 `service_name` 一起用 | Node           | 哈希表或数组。当它是哈希表时，内部元素的 key 是上游机器地址列表，格式为`地址 +（可选的）端口`，其中地址部分可以是 IP 也可以是域名，比如 `192.168.1.100:80`、`foo.com:80`等。value 则是节点的权重。当它是数组时，数组中每个元素都是一个哈希表，其中包含 `host`、`weight` 以及可选的 `port`、`priority`。`nodes` 可以为空，这通常用作占位符。客户端命中这样的上游会返回 502。                                        | `192.168.1.100:80`                               |
 | service_name   | 必需，不能和 `nodes` 一起用        | string         | 服务发现时使用的服务名，见[集成服务发现注册中心](./discovery.md)                                                                                                                                                                                                                                                                                            | `a-bootiful-client`                              |
-| discovery_type | 必需，如果设置了 `service_name`    | string         | 服务发现类型，见[集成服务发现注册中心](./discovery.md)                                                                                                                                                                                                                                                                                                      | `eureka`                                         |
+| discovery_type | 必需，如果设置了 `service_name`    | string         | 服务发现类型，见 [集成服务发现注册中心](./discovery.md)                                                                                                                                                                                                                                                                                                      | `eureka`                                         |
 | key            | 条件必需                           | 匹配类型       | 该选项只有类型是 `chash` 才有效。根据 `key` 来查找对应的 node `id`，相同的 `key` 在同一个对象中，永远返回相同 id，目前支持的 Nginx 内置变量有 `uri, server_name, server_addr, request_uri, remote_port, remote_addr, query_string, host, hostname, arg_***`，其中 `arg_***` 是来自 URL 的请求参数，[Nginx 变量列表](http://nginx.org/en/docs/varindex.html) |                                                  |
 | checks         | 可选                               | health_checker | 配置健康检查的参数，详细可参考[health-check](health-check.md)                                                                                                                                                                                                                                                                                               |                                                  |
 | retries        | 可选                               | 整型           | 使用底层的 Nginx 重试机制将请求传递给下一个上游，默认启用重试且次数为后端可用的 node 数量。如果指定了具体重试次数，它将覆盖默认值。`0` 代表不启用重试机制。                                                                                                                                                                                                 |                                                  |
 | retry_timeout  | 可选                               | number         | 限制是否继续重试的时间，若之前的请求和重试请求花费太多时间就不再继续重试。`0` 代表不启用重试超时机制。                                                                                                                                                                                                 |                                                  |
-| timeout        | 可选                               | 超时时间对象   | 设置连接、发送消息、接收消息的超时时间                                                                                                                                                                                                                                                                                                                      |                                                  |
+| timeout        | 可选                               | 超时时间对象   | 设置连接、发送消息、接收消息的超时时间，以秒为单位                                                                                                                                                                                                                                                                                                      |                                                  |
 | hash_on        | 可选                               | 辅助           | `hash_on` 支持的类型有 `vars`（Nginx 内置变量），`header`（自定义 header），`cookie`，`consumer`，默认值为 `vars`                                                                                                                                                                                                                                           |
 | name           | 可选                               | 辅助           | 标识上游服务名称、使用场景等。                                                                                                                                                                                                                                                                                                                              |                                                  |
 | desc           | 可选                               | 辅助           | 上游服务描述、使用场景等。                                                                                                                                                                                                                                                                                                                                  |                                                  |
@@ -565,9 +551,9 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 | update_time    | 可选                               | 辅助           | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                                                                                                                                                                                                                                                                               | 1602883670                                       |
 | tls.client_cert    | 可选                               | https 证书           | 设置跟上游通信时的客户端证书，细节见下文                                                                          | |
 | tls.client_key	 | 可选                               | https 证书私钥           | 设置跟上游通信时的客户端私钥，细节见下文                                                                                                                                                                                                                                                                                                              | |
-|keepalive_pool.size  |可选| 辅助 | 动态设置 `keepalive` 指令，细节见下文|
-|keepalive_pool.idle_timeout  |可选| 辅助 | 动态设置 `keepalive_timeout` 指令，细节见下文|
-|keepalive_pool.requests  |可选| 辅助 | 动态设置 `keepalive_requests` 指令，细节见下文|
+|keepalive_pool.size  | 可选 | 辅助 | 动态设置 `keepalive` 指令，细节见下文 |
+|keepalive_pool.idle_timeout  | 可选 | 辅助 | 动态设置 `keepalive_timeout` 指令，细节见下文 |
+|keepalive_pool.requests  | 可选 | 辅助 | 动态设置 `keepalive_requests` 指令，细节见下文 |
 
 `type` 可以是以下的一种：
 
@@ -580,12 +566,12 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 `hash_on` 比较复杂，这里专门说明下：
 
 1. 设为 `vars` 时，`key` 为必传参数，目前支持的 Nginx 内置变量有 `uri, server_name, server_addr, request_uri, remote_port, remote_addr, query_string, host, hostname, arg_***`，其中 `arg_***` 是来自 URL 的请求参数，[Nginx 变量列表](http://nginx.org/en/docs/varindex.html)
-2. 设为 `header` 时, `key` 为必传参数，其值为自定义的 header name, 即 "http\_`key`"
-3. 设为 `cookie` 时, `key` 为必传参数，其值为自定义的 cookie name，即 "cookie\_`key`"。请注意 cookie name 是**区分大小写字母**的。例如："cookie_x_foo" 与 "cookie_X_Foo" 表示不同的 `cookie`。
+2. 设为 `header` 时，`key` 为必传参数，其值为自定义的 header name，即 "http\_`key`"
+3. 设为 `cookie` 时，`key` 为必传参数，其值为自定义的 cookie name，即 "cookie\_`key`"。请注意 cookie name 是**区分大小写字母**的。例如："cookie_x_foo" 与 "cookie_X_Foo" 表示不同的 `cookie`。
 4. 设为 `consumer` 时，`key` 不需要设置。此时哈希算法采用的 `key` 为认证通过的 `consumer_name`。
 5. 如果指定的 `hash_on` 和 `key` 获取不到值时，就是用默认值：`remote_addr`。
 
-以下特性需要 APISIX 运行于 [APISIX-OpenResty](./how-to-build.md#步骤6：为-Apache-APISIX-构建-OpenResty)：
+以下特性需要 APISIX 运行于 [APISIX-Base](./FAQ.md#如何构建-APISIX-Base-环境？)：
 
 `scheme` 可以设置成 `tls`，表示 "TLS over TCP"。
 
@@ -594,7 +580,7 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 
 `keepalive_pool` 允许 upstream 对象有自己单独的连接池。
 它下属的字段，比如 `requests`，可以用了配置上游连接保持的参数。
-这个特性需要 APISIX 运行于 [APISIX-OpenResty](./how-to-build.md#步骤6：为-Apache-APISIX-构建-OpenResty)。
+这个特性需要 APISIX 运行于 [APISIX-Base](./FAQ.md#如何构建-APISIX-Base-环境？)。
 
 **upstream 对象 json 配置内容：**
 
@@ -602,13 +588,13 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 {
     "id": "1",                  # id
     "retries": 1,               # 请求重试次数
-    "timeout": {                # 设置连接、发送消息、接收消息的超时时间
+    "timeout": {                # 设置连接、发送消息、接收消息的超时时间，每项都为 15 秒
         "connect":15,
         "send":15,
         "read":15,
     },
     "nodes": {"host:80": 100},  # 上游机器地址列表，格式为`地址 + 端口`
-    # 等价于 "nodes": [ {"host":"host", "port":80, "weight": 100} ],
+                                # 等价于 "nodes": [ {"host":"host", "port":80, "weight": 100} ],
     "type":"roundrobin",
     "checks": {},               # 配置健康检查的参数
     "hash_on": "",
@@ -746,7 +732,7 @@ $ curl http://127.0.0.1:9080/get
 节点可以配置自己的优先级。只有在高优先级的节点不可用或者尝试过，才会访问一个低优先级的节点。
 
 由于默认的优先级是 0，我们可以给一些节点配置负数的优先级来作为备份。
-举个例子:
+举个例子：
 
 ```json
 {
@@ -807,13 +793,13 @@ $ curl http://127.0.0.1:9080/get
 | key         | 必需   | 私钥           | https 证书私钥                                                                                         |                                                  |
 | certs       | 可选   | 证书字符串数组 | 当你想给同一个域名配置多个证书时，除了第一个证书需要通过 cert 传递外，剩下的证书可以通过该参数传递上来 |                                                  |
 | keys        | 可选   | 私钥字符串数组 | certs 对应的证书私钥，注意要跟 certs 一一对应                                                          |                                                  |
-| client.ca | 可选   | 证书|  设置将用于客户端证书校验的 CA 证书。该特性需要 OpenResty 1.19+ |                                                  |
-| client.depth | 可选   | 辅助|  设置客户端证书校验的深度，默认为 1。该特性需要 OpenResty 1.19+ |                                             |
+| client.ca | 可选   | 证书 |  设置将用于客户端证书校验的 CA 证书。该特性需要 OpenResty 1.19+ |                                                  |
+| client.depth | 可选   | 辅助 |  设置客户端证书校验的深度，默认为 1。该特性需要 OpenResty 1.19+ |                                             |
 | snis        | 必需   | 匹配规则       | 非空数组形式，可以匹配多个 SNI                                                                         |                                                  |
 | labels      | 可选   | 匹配规则       | 标识附加属性的键值对                                                                                   | {"version":"v2","build":"16","env":"production"} |
 | create_time | 可选   | 辅助           | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                          | 1602883670                                       |
 | update_time | 可选   | 辅助           | 单位为秒的 epoch 时间戳，如果不指定则自动创建                                                          | 1602883670                                       |
-| status      | 可选   | 辅助           | 是否启用此 SSL, 缺省 `1`。                                                                             | `1` 表示启用，`0` 表示禁用                       |
+| status      | 可选   | 辅助           | 是否启用此 SSL，缺省 `1`。                                                                             | `1` 表示启用，`0` 表示禁用                       |
 
 ssl 对象 json 配置内容：
 
@@ -851,7 +837,7 @@ ssl 对象 json 配置内容：
 
 | 名字        | 可选项 | 类型   | 说明                                          | 示例       |
 | ----------- | ------ | ------ | --------------------------------------------- | ---------- |
-| plugins     | 必需   | Plugin | 详见 [Plugin](architecture-design/plugin.md)  |            |
+| plugins     | 必需   | Plugin | 详见 [Plugin](terminology/plugin.md)  |            |
 | create_time | 可选   | 辅助   | 单位为秒的 epoch 时间戳，如果不指定则自动创建 | 1602883670 |
 | update_time | 可选   | 辅助   | 单位为秒的 epoch 时间戳，如果不指定则自动创建 | 1602883670 |
 
@@ -876,13 +862,13 @@ ssl 对象 json 配置内容：
 
 ### body 请求参数
 
-|名字      |可选项   |类型 |说明        |示例|
+| 名字      | 可选项   | 类型 | 说明        | 示例 |
 |---------|---------|----|-----------|----|
-|plugins  |必需|Plugin|详见 [Plugin](architecture-design/plugin.md) ||
-|desc     |可选|辅助|标识描述、使用场景等|customer xxxx|
-|labels   |可选|辅助|标识附加属性的键值对|{"version":"v2","build":"16","env":"production"}|
-|create_time|可选|辅助|单位为秒的 epoch 时间戳，如果不指定则自动创建|1602883670|
-|update_time|可选|辅助|单位为秒的 epoch 时间戳，如果不指定则自动创建|1602883670|
+|plugins  | 必需 |Plugin| 详见 [Plugin](terminology/plugin.md) ||
+|desc     | 可选 | 辅助 | 标识描述、使用场景等 |customer xxxx|
+|labels   | 可选 | 辅助 | 标识附加属性的键值对 |{"version":"v2","build":"16","env":"production"}|
+|create_time| 可选 | 辅助 | 单位为秒的 epoch 时间戳，如果不指定则自动创建 |1602883670|
+|update_time| 可选 | 辅助 | 单位为秒的 epoch 时间戳，如果不指定则自动创建 |1602883670|
 
 [Back to TOC](#目录)
 
@@ -904,7 +890,7 @@ ssl 对象 json 配置内容：
 
 一个根据插件 ({plugin_name}) 的 `metadata_schema` 定义的数据结构的 json object 。
 
-例子:
+例子：
 
 ```shell
 $ curl http://127.0.0.1:9080/apisix/admin/plugin_metadata/example-plugin  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -i -X PUT -d '
@@ -931,13 +917,13 @@ Content-Type: text/plain
 | ----------- | ----------------------------------- | ---------- | ------------- |
 | GET         | /apisix/admin/plugins/list          | 无         | 获取资源列表  |
 | GET         | /apisix/admin/plugins/{plugin_name} | 无         | 获取资源      |
-| GET         | /apisix/admin/plugins?all=true      | 无         | 获取所有插件的所有属性|
+| GET         | /apisix/admin/plugins?all=true      | 无         | 获取所有插件的所有属性 |
 
 ### body 请求参数
 
 获取插件  ({plugin_name})  数据结构的  json object 。
 
-例子:
+例子：
 
 ```shell
 $ curl "http://127.0.0.1:9080/apisix/admin/plugins/list" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'
@@ -971,7 +957,7 @@ $ curl "http://127.0.0.1:9080/apisix/admin/plugins/key-auth" -H 'X-API-KEY:�
 
 *API*：/apisix/admin/stream_routes/{id}
 
-*Description*：Stream Route 是用于 TCP/UDP 动态代理的路由。参见 [TCP/UDP 动态代理](./stream-proxy.md) 一节.
+*Description*：Stream Route 是用于 TCP/UDP 动态代理的路由。参见 [TCP/UDP 动态代理](./stream-proxy.md) 一节。
 
 ### 请求方法
 
@@ -985,14 +971,16 @@ $ curl "http://127.0.0.1:9080/apisix/admin/plugins/key-auth" -H 'X-API-KEY:�
 
 ### body 请求参数
 
-| 名字             | 可选项| 类型     | 说明  | 示例 |
+| 名字             | 可选项 | 类型     | 说明  | 示例 |
 | ---------------- | ------| -------- | ------| -----|
-| upstream | 可选 | Upstream | 启用的 Upstream 配置，详见 [Upstream](architecture-design/upstream.md) |  |
-| upstream_id | 可选 | Upstream | 启用的 upstream id，详见 [Upstream](architecture-design/upstream.md) |  |
+| upstream | 可选 | Upstream | 启用的 Upstream 配置，详见 [Upstream](terminology/upstream.md) |  |
+| upstream_id | 可选 | Upstream | 启用的 upstream id，详见 [Upstream](terminology/upstream.md) |  |
 | remote_addr      | 可选  | IP/CIDR  | 过滤选项：如果客户端 IP 匹配，则转发到上游 | "127.0.0.1/32" 或 "127.0.0.1" |
 | server_addr      | 可选  | IP/CIDR  | 过滤选项：如果 APISIX 服务器 IP 与 server_addr 匹配，则转发到上游 | "127.0.0.1/32" 或 "127.0.0.1"  |
 | server_port      | 可选  | 整数     | 过滤选项：如果 APISIX 服务器 port 与 server_port 匹配，则转发到上游 | 9090  |
-| sni              | 可选  | Host     | 服务器名称指示| "test.com"  |
+| sni              | 可选  | Host     | 服务器名称指示 | "test.com"  |
+| protocol.name | 可选    | 字符串 | xRPC 框架代理的协议的名称                      | "redis"                    |
+| protocol.conf | 可选    | 配置 | 协议特定的配置                             |                    |
 
 点击 [此处](./stream-proxy.md#more-route-match-options)，了解更多有关过滤器如何工作的信息。
 

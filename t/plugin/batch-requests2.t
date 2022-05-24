@@ -65,8 +65,6 @@ __DATA__
             ngx.say(body)
         }
     }
---- request
-GET /t
 --- response_body
 passed
 
@@ -109,8 +107,6 @@ plugin_attr:
         }
     }
 --- error_code: 404
---- no_error_log
-[error]
 
 
 
@@ -135,8 +131,6 @@ plugin_attr:
             ngx.say(body)
         }
     }
---- request
-GET /t
 --- response_body
 passed
 
@@ -432,3 +426,21 @@ passed
 GET /aggregate
 --- response_body
 passed
+
+
+
+=== TEST 10: ensure the content-type is correct
+--- request
+POST /apisix/batch-requests
+{
+    "headers": {
+    },
+    "pipeline":[
+        {
+            "path": "/c",
+            "method": "PUT"
+        }
+    ]
+}
+--- response_headers
+Content-Type: application/json

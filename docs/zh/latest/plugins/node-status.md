@@ -21,16 +21,7 @@ title: node-status
 #
 -->
 
-## 目录
-
-- [**插件简介**](#插件简介)
-- [**插件属性**](#插件属性)
-- [**插件接口**](#插件接口)
-- [**启用插件**](#启用插件)
-- [**测试插件**](#测试插件)
-- [**禁用插件**](#禁用插件)
-
-## 插件简介
+## 描述
 
 `node-status` 是 `APISIX` 的请求状态查询插件，返回基本的状态信息。
 
@@ -56,7 +47,17 @@ plugins:                          # plugin list
   ......
 ```
 
-启动 `APISIX` 之后，即可访问该插件提供的接口，获得基本的状态信息。
+2. 为状态 API 配置路由，它将使用 [public-api](../../../en/latest/plugins/public-api.md) 插件。
+
+```shell
+$ curl http://127.0.0.1:9080/apisix/admin/routes/ns -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    "uri": "/apisix/status",
+    "plugins": {
+        "public-api": {}
+    }
+}'
+```
 
 ## 测试插件
 
@@ -83,7 +84,7 @@ Server: APISIX web server
 | waiting      | 当前等待客户端请求的空闲连接数               |
 | accepted     | 已经接受的客户端连接总数                         |
 | writing      | 当前正在写给客户端响应的连接数               |
-| handled      | 已经处理的连接总数,通常等于 accepted          |
+| handled      | 已经处理的连接总数，通常等于 accepted          |
 | active       | 当前活跃的客户端连接数                       |
 | reading      | 当前正在读取请求头的连接数                   |
 | id           | APISIX uid 信息，保存在 apisix/conf/apisix.uid  |

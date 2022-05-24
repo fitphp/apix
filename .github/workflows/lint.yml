@@ -2,23 +2,26 @@ name: ❄️ Lint
 
 on: [pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   misc:
     name: misc checker
     runs-on: ubuntu-latest
     steps:
       - name: Check out code.
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
       - name: spell check
         run: |
           pip install codespell==2.1.0
           git grep --cached -l '' | xargs codespell --ignore-words=.ignore_words
       - name: Merge conflict
         run: |
-          grep "^<<<<<<< HEAD" $(git grep --cached -l '' | xargs) && exit 1 || true
+          bash ./utils/check-merge-conflict.sh
       - name: Plugin Code
         run: |
-          sudo bash ./utils/check-plugins-code.sh
+          bash ./utils/check-plugins-code.sh
 
   ci-eclint:
     runs-on: ubuntu-latest
@@ -26,10 +29,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup Nodejs env
-        uses: actions/setup-node@v2.5.1
+        uses: actions/setup-node@v3.2.0
         with:
           node-version: '12'
 

@@ -21,15 +21,7 @@ title: api-breaker
 #
 -->
 
-## 目录
-
-- [**定义**](#定义)
-- [**属性列表**](#属性列表)
-- [**启用方式**](#启用方式)
-- [**测试插件**](#测试插件)
-- [**禁用插件**](#禁用插件)
-
-## 定义
+## 描述
 
 该插件实现 API 熔断功能，帮助我们保护上游业务服务。
 
@@ -37,21 +29,23 @@ title: api-breaker
 
 由代码逻辑自动按**触发不健康状态**的次数递增运算：
 
-每当上游服务返回 `unhealthy.http_statuses` 配置中的状态码(比如：500)，达到 `unhealthy.failures` 次时(比如：3 次)，认为上游服务处于不健康状态。
+每当上游服务返回 `unhealthy.http_statuses` 配置中的状态码（比如：500），达到 `unhealthy.failures` 次时 (比如：3 次)，认为上游服务处于不健康状态。
 
 第一次触发不健康状态，**熔断 2 秒**。
 
 然后，2 秒过后重新开始转发请求到上游服务，如果继续返回 `unhealthy.http_statuses` 状态码，记数再次达到 `unhealthy.failures` 次时，**熔断 4 秒**（倍数方式）。
 
-依次类推，2, 4, 8, 16, 32, 64, ..., 256, 最大到 300。 300 是 `max_breaker_sec` 的最大值，允许自定义修改。
+依次类推，2, 4, 8, 16, 32, 64, ..., 256，最大到 300。 300 是 `max_breaker_sec` 的最大值，允许自定义修改。
 
-在不健康状态时，当转发请求到上游服务并返回 `healthy.http_statuses` 配置中的状态码(比如：200)，达到 `healthy.successes` 次时(比如：3 次)，认为上游服务恢复健康状态。
+在不健康状态时，当转发请求到上游服务并返回 `healthy.http_statuses` 配置中的状态码（比如：200），达到 `healthy.successes` 次时 (比如：3 次)，认为上游服务恢复健康状态。
 
-## 属性列表
+## 属性
 
 | 名称                    | 类型           | 必选项 | 默认值     | 有效值          | 描述                             |
 | ----------------------- | -------------- | ------ | ---------- | --------------- | -------------------------------- |
 | break_response_code     | integer        | 必须   | 无         | [200, ..., 599] | 不健康返回错误码                 |
+| break_response_body     | string         | 可选   | 无         |                 | 不健康返回报文                   |
+| break_response_headers  | array[object]  | 可选   | 无         |                 | 不健康返回报文头，这里可以设置多个。这个值能够以 `$var` 的格式包含 Nginx 变量，比如 `$remote_addr $balancer_ip`。该字段仅在 `break_response_body` 被配置时生效 |
 | max_breaker_sec         | integer        | 可选   | 300        | >=3             | 最大熔断持续时间                 |
 | unhealthy.http_statuses | array[integer] | 可选   | {500}      | [500, ..., 599] | 不健康时候的状态码               |
 | unhealthy.failures      | integer        | 可选   | 3          | >=1             | 触发不健康状态的连续错误请求次数 |

@@ -1,21 +1,28 @@
 {
-  "version": "2.12.0",
+  "version": "2.14.0",
   "sidebar": [
     {
       "type": "category",
       "label": "Architecture Design",
       "items": [
         "architecture-design/apisix",
-        "architecture-design/route",
-        "architecture-design/plugin",
-        "architecture-design/script",
-        "architecture-design/service",
-        "architecture-design/consumer",
-        "architecture-design/upstream",
-        "architecture-design/global-rule",
         "architecture-design/plugin-config",
-        "architecture-design/router",
         "architecture-design/debug-mode"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Terminology",
+      "items": [
+        "terminology/api-gateway",
+        "terminology/consumer",
+        "terminology/global-rule",
+        "terminology/plugin",
+        "terminology/route",
+        "terminology/router",
+        "terminology/script",
+        "terminology/service",
+        "terminology/upstream"
       ]
     },
     {
@@ -24,7 +31,7 @@
     },
     {
       "type": "doc",
-      "id": "how-to-build"
+      "id": "installation-guide"
     },
     {
       "type": "category",
@@ -52,7 +59,8 @@
             "plugins/proxy-rewrite",
             "plugins/grpc-transcode",
             "plugins/grpc-web",
-            "plugins/fault-injection"
+            "plugins/fault-injection",
+            "plugins/mocking"
           ]
         },
         {
@@ -60,13 +68,17 @@
           "label": "Authentication",
           "items": [
             "plugins/authz-keycloak",
+            "plugins/authz-casdoor",
             "plugins/wolf-rbac",
             "plugins/key-auth",
             "plugins/jwt-auth",
             "plugins/basic-auth",
             "plugins/openid-connect",
             "plugins/hmac-auth",
-            "plugins/authz-casbin"
+            "plugins/authz-casbin",
+            "plugins/ldap-auth",
+            "plugins/opa",
+            "plugins/forward-auth"
           ]
         },
         {
@@ -95,37 +107,52 @@
             "plugins/api-breaker",
             "plugins/traffic-split",
             "plugins/request-id",
+            "plugins/proxy-control",
             "plugins/client-control"
           ]
         },
         {
           "type": "category",
-          "label": "Monitoring",
+          "label": "Observability",
           "items": [
-            "plugins/prometheus",
-            "plugins/zipkin",
-            "plugins/skywalking",
-            "plugins/opentelemetry",
-            "plugins/node-status"
-          ]
-        },
-        {
-          "type": "category",
-          "label": "Loggers",
-          "items": [
-            "plugins/http-logger",
-            "plugins/skywalking-logger",
-            "plugins/tcp-logger",
-            "plugins/kafka-logger",
-            "plugins/rocketmq-logger",
-            "plugins/udp-logger",
-            "plugins/syslog",
-            "plugins/log-rotate",
-            "plugins/error-log-logger",
-            "plugins/sls-logger",
-            "plugins/google-cloud-logging",
-            "plugins/splunk-hec-logging",
-            "plugins/file-logger"
+            {
+              "type": "category",
+              "label": "Tracers",
+              "items": [
+                "plugins/zipkin",
+                "plugins/skywalking",
+                "plugins/opentelemetry"
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Metrics",
+              "items": [
+                "plugins/prometheus",
+                "plugins/node-status",
+                "plugins/datadog"
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Loggers",
+              "items": [
+                "plugins/http-logger",
+                "plugins/skywalking-logger",
+                "plugins/tcp-logger",
+                "plugins/kafka-logger",
+                "plugins/rocketmq-logger",
+                "plugins/udp-logger",
+                "plugins/clickhouse-logger",
+                "plugins/syslog",
+                "plugins/log-rotate",
+                "plugins/error-log-logger",
+                "plugins/sls-logger",
+                "plugins/google-cloud-logging",
+                "plugins/splunk-hec-logging",
+                "plugins/file-logger"
+              ]
+            }
           ]
         },
         {
@@ -174,7 +201,8 @@
             "discovery",
             "discovery/dns",
             "discovery/nacos",
-            "discovery/eureka"
+            "discovery/eureka",
+            "discovery/kubernetes"
           ]
         },
         {

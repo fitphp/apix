@@ -21,23 +21,6 @@ title: Plugin Develop
 #
 -->
 
-## table of contents
-
-- [table of contents](#table-of-contents)
-- [where to put your plugins](#where-to-put-your-plugins)
-- [check dependencies](#check-dependencies)
-- [name, priority and the others](#name-priority-and-the-others)
-- [schema and check](#schema-and-check)
-- [choose phase to run](#choose-phase-to-run)
-- [implement the logic](#implement-the-logic)
-  - [conf parameter](#conf-parameter)
-  - [ctx parameter](#ctx-parameter)
-- [register public API](#register-public-api)
-- [register control API](#register-control-api)
-- [register custom variable](#register-custom-variable)
-- [write test case](#write-test-case)
-  - [attach the test-nginx execution process:](#attach-the-test-nginx-execution-process)
-
 This documentation is about developing plugin in Lua. For other languages,
 see [external plugin](./external-plugin.md).
 
@@ -320,12 +303,25 @@ In APISIX, only the authentication logic can be run in the rewrite phase. Other 
 The following code snippet shows how to implement any logic relevant to the plugin in the OpenResty log phase.
 
 ```lua
-function _M.log(conf)
+function _M.log(conf, ctx)
 -- Implement logic here
 end
 ```
 
-**Note : we can't invoke `ngx.exit` or `core.respond.exit` in rewrite phase and access phase. if need to exit, just return the status and body, the plugin engine will make the exit happen with the returned status and body. [example](https://github.com/apache/apisix/blob/35269581e21473e1a27b11cceca6f773cad0192a/apisix/plugins/limit-count.lua#L177)**
+**Note : we can't invoke `ngx.exit`, `ngx.redirect` or `core.respond.exit` in rewrite phase and access phase. if need to exit, just return the status and body, the plugin engine will make the exit happen with the returned status and body. [example](https://github.com/apache/apisix/blob/35269581e21473e1a27b11cceca6f773cad0192a/apisix/plugins/limit-count.lua#L177)**
+
+### extra phase
+
+Besides OpenResty's phases, we also provide extra phases to satisfy specific purpose:
+
+* `delayed_body_filter`
+
+```lua
+function _M.delayed_body_filter(conf, ctx)
+    -- delayed_body_filter is called after body_filter
+    -- it is used by the tracing plugins to end the span right after body_filter
+end
+```
 
 ## implement the logic
 
@@ -514,7 +510,7 @@ The above test case represents a simple scenario. Most scenarios will require mu
 
 Additionally, there are some convenience testing endpoints which can be found [here](https://github.com/apache/apisix/blob/master/t/lib/server.lua#L36). For example, see [proxy-rewrite](https://github.com/apache/apisix/blob/master/t/plugin/proxy-rewrite.lua). In test 42, the upstream `uri` is made to redirect `/test?new_uri=hello` to `/hello` (which always returns `hello world`). In test 43, the response body is confirmed to equal `hello world`, meaning the proxy-rewrite configuration added with test 42 worked correctly.
 
-Refer the following [document](how-to-build.md#Step-4-Run-Test-Cases) to setup the testing framework.
+Refer the following [document](how-to-build.md) to setup the testing framework.
 
 ### attach the test-nginx execution process:
 

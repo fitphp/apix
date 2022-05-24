@@ -82,7 +82,8 @@ __DATA__
                     "uri": "/hello",
                     "plugins": {
                         "ext-plugin-pre-req": {"a":"b"},
-                        "ext-plugin-post-req": {"c":"d"}
+                        "ext-plugin-post-req": {"c":"d"},
+                        "ext-plugin-post-resp": {"e":"f"}
                     },
                     "upstream": {
                         "nodes": {
@@ -115,8 +116,8 @@ hello world
 --- error_log
 get conf token: 233
 --- no_error_log
-[error]
 flush conf token lrucache
+[error]
 --- grep_error_log eval
 qr/(sending|receiving) rpc type: \d data length:/
 --- grep_error_log_out
@@ -136,6 +137,14 @@ sending rpc type: 2 data length:
 receiving rpc type: 2 data length:
 sending rpc type: 2 data length:
 receiving rpc type: 2 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
+sending rpc type: 4 data length:
+receiving rpc type: 4 data length:
+sending rpc type: 4 data length:
+receiving rpc type: 4 data length:
 
 
 
@@ -268,11 +277,17 @@ sending rpc type: 1 data length:
 receiving rpc type: 1 data length:
 sending rpc type: 1 data length:
 receiving rpc type: 1 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
+sending rpc type: 1 data length:
+receiving rpc type: 1 data length:
 --- error_log
 flush conf token lrucache
 flush conf token in shared dict
---- no_error_log
-[error]
 
 
 
@@ -334,8 +349,6 @@ hello world
     }
 --- error_log eval
 qr/get conf token: 233 conf: \[(\{"value":"bar","name":"foo"\}|\{"name":"foo","value":"bar"\}),(\{"value":"dog","name":"cat"\}|\{"name":"cat","value":"dog"\})\]/
---- no_error_log
-[error]
 
 
 
@@ -384,8 +397,6 @@ hello world
 --- error_log
 refresh cache and try again
 flush conf token in shared dict
---- no_error_log
-[error]
 
 
 
@@ -549,8 +560,6 @@ hello world
     }
 --- error_log eval
 qr/get conf token: 233 conf: \[(\{"value":"bar","name":"foo"\}|\{"name":"foo","value":"bar"\}),(\{"value":"dog","name":"cat"\}|\{"name":"cat","value":"dog"\})\]/
---- no_error_log
-[error]
 
 
 

@@ -19,11 +19,9 @@
 . ./ci/common.sh
 
 before_install() {
-    sudo cpanm --notest Test::Nginx >build.log 2>&1 || (cat build.log && exit 1)
+    linux_get_dependencies
 
-    # launch deps env
-    make ci-env-up
-    ./ci/linux-ci-init-service.sh
+    sudo cpanm --notest Test::Nginx >build.log 2>&1 || (cat build.log && exit 1)
 }
 
 do_install() {
@@ -40,17 +38,13 @@ do_install() {
     # sudo apt-get install tree -y
     # tree deps
 
-    git clone https://github.com/iresty/test-nginx.git test-nginx
+    git clone https://github.com/openresty/test-nginx.git test-nginx
     make utils
 
     mkdir -p build-cache
     # install and start grpc_server_example
     cd t/grpc_server_example
 
-    if [ ! "$(ls -A . )" ]; then # for local development only
-        git submodule init
-        git submodule update
-    fi
     CGO_ENABLED=0 go build
     cd ../../
 
@@ -74,7 +68,7 @@ script() {
     export_or_prefix
     openresty -V
 
-    ./utils/set-dns.sh
+    set_coredns
 
     ./t/grpc_server_example/grpc_server_example \
         -grpc-address :50051 -grpcs-address :50052 -grpcs-mtls-address :50053 \
@@ -92,7 +86,7 @@ script() {
     done
 
     # APISIX_ENABLE_LUACOV=1 PERL5LIB=.:$PERL5LIB prove -Itest-nginx/lib -r t
-    FLUSH_ETCD=1 prove -Itest-nginx/lib -I./ -r t | tee /tmp/test.result
+    FLUSH_ETCD=1 prove -Itest-nginx/lib -I./ -r $TEST_FILE_SUB_DIR | tee /tmp/test.result
     rerun_flaky_tests /tmp/test.result
 }
 

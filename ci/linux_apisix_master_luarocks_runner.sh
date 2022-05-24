@@ -19,6 +19,8 @@
 . ./ci/common.sh
 
 do_install() {
+    linux_get_dependencies
+
     export_or_prefix
 
     ./utils/linux-install-openresty.sh
@@ -53,7 +55,7 @@ script() {
     # apisix cli test
     # todo: need a more stable way
 
-    cat /usr/local/apisix/logs/error.log | grep '\[error\]' > /tmp/error.log | true
+    grep '\[error\]' /usr/local/apisix/logs/error.log > /tmp/error.log | true
     if [ -s /tmp/error.log ]; then
         echo "=====found error log====="
         cat /usr/local/apisix/logs/error.log

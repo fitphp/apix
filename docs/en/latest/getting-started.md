@@ -1,5 +1,9 @@
 ---
-title: Getting Started
+title: Getting started
+keywords:
+  - APISIX
+  - Getting Started
+description: This document walks you through how you can get started with Apache APISIX.
 ---
 
 <!--
@@ -21,37 +25,80 @@ title: Getting Started
 #
 -->
 
-## Summary
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-This article is a quick start guide for Apache APISIX. The Quick Start is divided into the following three steps:
+The guide walks you through the concepts, features and how you can get started with Apache APISIX.
 
-1. Install Apache APISIX via [Docker Compose](https://docs.docker.com/compose/).
-1. Create a route and bind it with a Upstream.
-1. Use `curl` command to verify that the results returned after binding are as expected.
+You will learn:
 
-In addition, this article provides some advanced operations on how to use Apache APISIX, including adding authentication, prefixing Route, using the APISIX Dashboard, and troubleshooting.
+- What Apache APISIX is.
+- Architecture and key concepts of APISIX.
+- How to install and run APISIX in Docker.
+- How to create your first Route and configure an Upstream using Admin API.
+- How to use APISIX dashboard.
+- Where you can reach out for help.
 
-We will use the following `echo` endpoint as an example, which will return the parameters we passed.
+## What is Apache APISIX?
+
+Apache APISIX is an open source, dynamic, scalable, and high-performance cloud native API gateway for all your APIs and microservices.
+
+APISIX facilitates interface traffic handling for websites, mobile and IoT applications by providing services such as load balancing, dynamic upstream, canary release, fine-grained routing, rate limiting, and many more.
+
+### Features
+
+- Multi-platform support: APISIX can run from bare-metal machines to Kubernetes providing a vendor neutral, multi-platform solution. It also provides integration to cloud services like AWS Lambda, Azure Function, Lua functions and Apache OpenWhisk.
+- Fully dynamic: APISIX supports hot-reloading, meaning you don't need to restart the service to reflect changes in the configuration.
+- Fine-grained routing: APISIX supports using all [built-in NGINX variables](http://nginx.org/en/docs/varindex.html) for routing. You can define custom matching functions to filter requests and match Route.
+- Ops-friendly: APISIX is renowned for its ops-friendliness by DevOps teams. It integrates with tools and platforms like [HashiCorp Vault](./plugins/jwt-auth.md#usage-with-hashicorp-vault), [Zipkin](./plugins/zipkin.md), [Apache SkyWalking](./plugins/skywalking.md), [Consul](./discovery/consul_kv.md), [Nacos](./discovery/nacos.md) and [Eureka](./discovery.md). With [APISIX Dashboard](https://github.com/apache/apisix-dashboard), operators can configure APISIX through an easy-to-use and intuitive UI.
+- Multi-language Plugin support: APISIX supports multiple programming languages for Plugin development. Developers can choose a language-specific SDK to write custom Plugins.
+
+## Key concepts
+
+Here is a high-level overview of APISIX's software architecture:
+
+![flow-software-architecture](https://raw.githubusercontent.com/apache/apisix/master/docs/assets/images/flow-software-architecture.png)
+
+The table below defines the key concepts and components of APISIX referenced in this guide:
+
+| Concept/Component | Description                                                                                                                                                              |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Route             | Routes specify how requests to APISIX are forwarded to the Upstream. They match a client's request based on defined rules and loads and executes the configured Plugins. |
+| Upstream          | Upstream is the service to forward your requests to. They can be configured to a Route or abstracted out to an Upstream object.                                          |
+| Admin API         | API that lets users control their deployed APISIX instance.                                                                                                       |
+
+## Before you begin
+
+Before you start with APISIX, make sure you have the following tools installed:
+
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/).
+- [curl](https://curl.se/docs/manpage.html) for testing the API. Alternatively, you can use tools like [Hoppscotch](https://hoppscotch.io/).
+
+The example Upstream service used here is [httpbin.org](https://httpbin.org) and you can use it for your testing.
+
+This is an echo service, meaning it will return back the parameters we pass in the request.
 
 **Request**
 
-The request URL consists of these components:
+The components of the request URL are shown and explained below:
 
 ![RequestURL](../../assets/images/requesturl.jpg)
 
-- Protocol: the network transport protocol, `HTTP` protocol is used in our example.
-- Port: The port, `80` is used in our example.
-- Host: The host, `httpbin.org` is used in our example.
-- Path: The path, `/get` is used in our example.
-- Query Parameters: the query string, two strings `foo1` and `foo2` are listed in our example.
+- Protocol: The network transport protocol. `HTTP` protocol is used for this example.
+- Port: The port. `80` is used for this example.
+- Host: The host. `httpbin.org` is used for this example.
+- Path: The path. `/get` is used for this example.
+- Query Parameters: The query string. Two strings `foo1` and `foo2` are used for this example.
 
-Run the following command to send the request:
+We can use the `curl` command to send the request:
 
 ```bash
 curl --location --request GET "http://httpbin.org/get?foo1=bar1&foo2=bar2"
 ```
 
 **Response**
+
+We receive a JSON response when we send the request:
 
 ```json
 {
@@ -70,75 +117,94 @@ curl --location --request GET "http://httpbin.org/get?foo1=bar1&foo2=bar2"
 }
 ```
 
-## Pre-requisites
+## Install Apache APISIX
 
-- Installed [Docker](https://www.docker.com/) and [Docker Compose component](https://docs.docker.com/compose/).
+To get started, we will install Apache APISIX with Docker and enable the [Admin API](./admin-api.md).
 
-- We use the [curl](https://curl.se/docs/manpage.html) command for API testing. You can also use other tools such as [Postman](https://www.postman.com/) for testing.
+First clone the [apisix-docker](https://github.com/apache/apisix-docker) repository:
 
-<!--
-#
-#    In addition to the basic Markdown syntax, we use remark-admonitions
-#    alongside MDX to add support for admonitions. Admonitions are wrapped
-#    by a set of 3 colons.
-#    Please refer to https://docusaurus.io/docs/next/markdown-features/admonitions
-#    for more detail.
-#
--->
-
-:::note Note
-If you already have Apache APISIX installed, please skip Step 1, and go to [Step 2](getting-started.md#step-2-create-a-route) directly.
-:::
-
-## Step 1: Install Apache APISIX
-
-Thanks to Docker, we can start Apache APISIX and enable it by enabling [Admin API](./admin-api.md).
-
-```bash
-# Download the Docker image of Apache APISIX
+```shell
 git clone https://github.com/apache/apisix-docker.git
-# Switch the current directory to the apisix-docker/example path
 cd apisix-docker/example
-# Run the docker-compose command to install Apache APISIX
+```
+
+Now, you can use `docker-compose` to start APISIX.
+
+<Tabs
+  groupId="cpu-arch"
+  defaultValue="x86"
+  values={[
+    {label: 'x86', value: 'x86'},
+    {label: 'ARM/M1', value: 'arm'},
+  ]}>
+<TabItem value="x86">
+
+```shell
 docker-compose -p docker-apisix up -d
 ```
 
-> Apache APISIX has already supported ARM64 architecture. For ARM64 users, please use `docker-compose -p docker-apisix -f docker-compose-arm64.yml up -d` instead in the last step.
+</TabItem>
 
-It will take some time to download all required files, please be patient.
+<TabItem value="arm">
 
-Once the download is complete, execute the `curl` command on the host running Docker to access the Admin API, and determine if Apache APISIX was successfully started based on the returned data.
+```shell
+docker-compose -p docker-apisix -f docker-compose-arm64.yml up -d
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+
+You can check out [Installing Apache APISIX](./installation-guide.md) for different installation methods.
+
+:::
+
+:::info IMPORTANT
+
+Make sure that all the required ports (default: 9080, 9443 and 2379) are available and not used by other system processes.
+
+On Unix-based systems, you can run the command below to terminate a process listening on a specific port:
 
 ```bash
-# Note: Please execute the curl command on the host where you are running Docker.
+sudo fuser -k 9443/tcp
+```
+
+If a Docker container is crashing, you can inspect the logs to diagnose the problem:
+
+```bash
+docker logs -f --tail <container_id>
+```
+
+:::
+
+Once APISIX is running, you can use `curl` to access the Admin API. You can also check if APISIX is running properly by running this command and checking the response.
+
+```bash
 curl "http://127.0.0.1:9080/apisix/admin/services/" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'
 ```
 
-The following data is returned to indicate that Apache APISIX was successfully started:
+This response indicates that APISIX is running successfully:
 
 ```json
 {
-  "count":1,
+  "count":0,
   "action":"get",
   "node":{
     "key":"/apisix/services",
-    "nodes":{},
+    "nodes":[],
     "dir":true
   }
 }
 ```
 
-## Step 2: Create a Route
+## Create a Route
 
-Now we have a running instance of Apache APISIX! Next, let's create a Route.
+From the previous step, we have a running instance of APISIX in Docker. Now let's create a Route.
 
-### How it works
+APISIX provides a powerful [Admin API](./admin-api.md) and [APISIX Dashboard](https://github.com/apache/apisix-dashboard). Here, we will use the Admin API to create a Route and connect it to an [Upstream](./terminology/upstream.md) service. When a request arrives, APISIX will forward the request to the specified Upstream service.
 
-Apache APISIX provides users with a powerful [Admin API](./admin-api.md) and [APISIX Dashboard](https://github.com/apache/apisix-dashboard). In this article, we use the Admin API to walk you through the procedures of creating a Route.
-
-We can create a [Route](./architecture-design/route.md) and connect it to an Upstream service(also known as the [Upstream](./architecture-design/upstream.md)). When a `Request` arrives at Apache APISIX, Apache APISIX knows which Upstream the request should be forwarded to.
-
-Because we have configured matching rules for the Route object, Apache APISIX can forward the request to the corresponding Upstream service. The following code creates a sample configuration of Route:
+We will configure the Route so that APISIX can forward the request to the corresponding Upstream service:
 
 ```bash
 curl "http://127.0.0.1:9080/apisix/admin/routes/1" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
@@ -155,23 +221,25 @@ curl "http://127.0.0.1:9080/apisix/admin/routes/1" -H "X-API-KEY: edd1c9f034335f
 }'
 ```
 
-This routing configuration means that all matching inbound requests will be forwarded to the Upstream service `httpbin.org:80` when they meet **all** the rules listed below:
+This configuration means that it will forward all matching inbound requests to the Upstream service (`httpbin.org:80`) if they meet these specified criterion:
 
 - The HTTP method of the request is `GET`.
 - The request header contains the `host` field, and its value is `example.com`.
-- The request path matches `/anything/*`, `*` means any subpath, for example `/anything/foo?arg=10`.
+- The request path matches `/anything/*`. `*` means any sub path. For example `/anything/foo?arg=10`.
 
-Once this route is created, we can access the Upstream service using the address exposed by Apache APISIX.
+With the Route has created, we can access the Upstream service from the address exposed by APISIX:
 
 ```bash
 curl -i -X GET "http://127.0.0.1:9080/anything/foo?arg=10" -H "Host: example.com"
 ```
 
-This will be forwarded to `http://httpbin.org:80/anything/foo?arg=10` by Apache APISIX.
+This request will be forwarded to `http://httpbin.org:80/anything/foo?arg=10` by APISIX.
 
-### Create an Upstream
+## Abstracting to Upstream
 
-After reading the previous section, we know that we must set up an `Upstream` for  the `Route`. An Upstream can be created by simply executing the following command:
+Instead of configuring the Upstream directly to the Route, you can create an Upstream object and use it in the Route.
+
+To create an Upstream object:
 
 ```bash
 curl "http://127.0.0.1:9080/apisix/admin/upstreams/1" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
@@ -183,143 +251,50 @@ curl "http://127.0.0.1:9080/apisix/admin/upstreams/1" -H "X-API-KEY: edd1c9f0343
 }'
 ```
 
-We use `roundrobin` as the load balancing mechanism, and set `httpbin.org:80` as our upstream target (Upstream service) with an ID of `1`. For more information on the fields, see [Admin API](./admin-api.md).
+This is the same as the Upstream service we configured directly into the Route on the previous section.
 
-<!--
-#
-#    In addition to the basic Markdown syntax, we use remark-admonitions
-#    alongside MDX to add support for admonitions. Admonitions are wrapped
-#    by a set of 3 colons.
-#    Please refer to https://docusaurus.io/docs/next/markdown-features/admonitions
-#    for more detail.
-#
--->
-
-:::note Note
-Creating an Upstream service is not actually necessary, as we can use [Plugin](./architecture-design/plugin.md) to intercept the request and then respond directly. However, for the purposes of this guide, we assume that at least one Upstream service needs to be set up.
-:::
-
-### Bind the Route to the Upstream
-
-We've just created an Upstream service (referencing our backend service), now let's bind a Route for it!
+To bind this Upstream to the Route, we can use the `upstream_id` as `1`:
 
 ```bash
 curl "http://127.0.0.1:9080/apisix/admin/routes/1" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
 {
-  "uri": "/get",
-  "host": "httpbin.org",
+  "methods": ["GET"],
+  "host": "example.com",
+  "uri": "/anything/*",
   "upstream_id": "1"
 }'
 ```
 
-## Step 3: Validation
-
-We have created the route and the Upstream service and bound them. Now let's access Apache APISIX to test this route.
+With the Route has created, we can access the Upstream service from the address exposed by APISIX:
 
 ```bash
-curl -i -X GET "http://127.0.0.1:9080/get?foo1=bar1&foo2=bar2" -H "Host: httpbin.org"
+curl -i -X GET "http://127.0.0.1:9080/anything/foo?arg=10" -H "Host: example.com"
 ```
 
-It returns data from our Upstream service (actually `httpbin.org`) and the result is as expected.
+This request will be forwarded to `http://httpbin.org:80/anything/foo?arg=10` by APISIX.
 
-## Advanced Operations
+## Using the APISIX Dashboard
 
-This section provides some advanced operations such as adding authentication, prefixing Route, using the APISIX Dashboard, and troubleshooting.
+You can also use the APISIX Dashboard to create and configure Routes similar to the Admin API.
 
-### Add Authentication
+If you have followed the steps above, you would be able to access the dashboard at [localhost:9000](http://localhost:9000/).
 
-The route we created in step 2 is public. Thus, **anyone** can access this Upstream service as long as they know the address that Apache APISIX exposes to the outside world. This is unsafe, it creates certain security risks. In a practical application scenario, we need to add authentication to the route.
+Click on [Route](http://localhost:9000/routes/list) from the sidebar to view a list of configured Routes. You would be able to see the Routes you created using the Admin API as well.
 
-Now we want only a specific user `John` to have access to this Upstream service, and we need to use [Consumer](./architecture-design/consumer.md) and [Plugin](./architecture-design/plugin.md) to implement authentication.
+You can create a new Route through the dashboard by clicking the [Create](http://localhost:9000/routes/create) button and following the instructions:
 
-First, let's use [key-auth](./plugins/key-auth.md) plugin to create a [Consumer](./architecture-design/consumer.md) `John`, we need to provide a specified key.
+![Creating a Route with APISIX Dashboard](../../assets/images/create-a-route.png)
 
-```bash
-curl "http://127.0.0.1:9080/apisix/admin/consumers" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
-{
-  "username": "john",
-  "plugins": {
-    "key-auth": {
-      "key": "key-of-john"
-    }
-  }
-}'
-```
+The newly created Route is added to the list of Routes:
 
-Next, let's bind `consumer (John)` to the route, we just need to **enable** the [key-auth](./plugins/key-auth.md) plugin.
+![Creating a Route with APISIX Dashboard](../../assets/images/list-of-routes.png)
 
-```bash
-curl "http://127.0.0.1:9080/apisix/admin/routes/1" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
-{
-  "uri": "/get",
-  "host": "httpbin.org",
-  "plugins": {
-    "key-auth": {}
-  },
-  "upstream_id": "1"
-}'
-```
+Check out the [APISIX Dashboard documentation](/docs/dashboard/USER_GUIDE) to learn more.
 
-Now when we access the route created in step 2, an **Unauthorized Error** will be triggered.
+## Where to go next?
 
-The correct way to access that route is to add a `Header` named `apikey` with the correct key, as shown in the code below:
+If you have followed the steps above, you should have APISIX running and you would have configured a Route.
 
-```bash
-curl -i -X GET http://127.0.0.1:9080/get -H "Host: httpbin.org" -H "apikey: key-of-john"
-```
+You can now look into adding Plugins to provide features like authentication, security, traffic control and observability. See the [Plugin Hub](/plugins) to learn more.
 
-### Prefixing a Route
-
-Now, suppose you want to add a prefix to a route (e.g. samplePrefix) and don't want to use the `host` header, then you can use the `proxy-rewrite` plugin to do so.
-
-```bash
-curl "http://127.0.0.1:9080/apisix/admin/routes/1" -H "X-API-KEY: edd1c9f034335f136f87ad84b625c8f1" -X PUT -d '
-{
-  "uri": "/samplePrefix/get",
-  "plugins": {
-    "proxy-rewrite": {
-      "regex_uri": ["^/samplePrefix/get(.*)", "/get$1"]
-    },
-    "key-auth": {}
-  },
-  "upstream_id": "1"
-}'
-```
-
-You can now use the following command to invoke the route:
-
-```bash
-curl -i -X GET "http://127.0.0.1:9080/samplePrefix/get?param1=foo&param2=bar" -H "apikey: key-of-john"
-```
-
-### APISIX Dashboard
-
-Apache APISIX provides a [Dashboard](https://github.com/apache/apisix-dashboard) to make our operation more intuitive and easier.
-
-![Dashboard](../../assets/images/dashboard.jpeg)
-
-<!--
-#
-#    In addition to the basic Markdown syntax, we use remark-admonitions
-#    alongside MDX to add support for admonitions. Admonitions are wrapped
-#    by a set of 3 colons.
-#    Please refer to https://docusaurus.io/docs/next/markdown-features/admonitions
-#    for more detail.
-#
--->
-
-### Troubleshooting
-
-- Make sure that all required ports (**default 9080/9443/2379**) are not used by other systems or processes.
-
-    The following are commands to terminate a process that is listening on a specific port (on unix-based systems).
-
-    ```bash
-    sudo fuser -k 9443/tcp
-    ```
-
-- If the Docker container keeps restarting or failing, log in to the container and observe the logs to diagnose the problem.
-
-    ```bash
-    docker logs -f --tail container_id
-    ```
+If you ever get stuck, you can ask for help in the [APISIX community channels](/docs/general/join) or [open an issue](/docs/general/submit-issue) on GitHub.
