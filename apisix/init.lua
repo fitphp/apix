@@ -56,6 +56,7 @@ local str_byte        = string.byte
 local str_sub         = string.sub
 local tonumber        = tonumber
 local pairs           = pairs
+local type            = type
 local control_api_router
 
 local is_http = false
@@ -157,14 +158,14 @@ end
 
 function _M.http_ssl_phase()
     local ngx_ctx = ngx.ctx
-    local api_ctx = ngx_ctx.api_ctx
-
-    if api_ctx == nil then
-        api_ctx = core.tablepool.fetch("api_ctx", 0, 32)
-        ngx_ctx.api_ctx = api_ctx
-    end
+    local api_ctx = core.tablepool.fetch("api_ctx", 0, 32)
+    ngx_ctx.api_ctx = api_ctx
 
     local ok, err = router.router_ssl.match_and_set(api_ctx)
+
+    core.tablepool.release("api_ctx", api_ctx)
+    ngx_ctx.api_ctx = nil
+
     if not ok then
         if err then
             core.log.error("failed to fetch ssl config: ", err)
@@ -229,7 +230,11 @@ local function set_upstream_headers(api_ctx, picked_server)
 
     local hdr = core.request.header(api_ctx, "X-Forwarded-Proto")
     if hdr then
-        api_ctx.var.var_x_forwarded_proto = hdr
+        if type(hdr) == "table" then
+            api_ctx.var.var_x_forwarded_proto = hdr[1]
+        else
+            api_ctx.var.var_x_forwarded_proto = hdr
+        end
     end
 end
 
@@ -486,13 +491,33 @@ function _M.http_access_phase()
         end
 
         local route_val = route.value
-        if route_val.upstream and route_val.upstream.enable_websocket then
-            enable_websocket = true
-        end
 
         api_ctx.matched_upstream = (route.dns_value and
                                     route.dns_value.upstream)
                                    or route_val.upstream
+    end
+
+    if api_ctx.matched_upstream and api_ctx.matched_upstream.tls and
+        api_ctx.matched_upstream.tls.client_cert_id then
+
+        local cert_id = api_ctx.matched_upstream.tls.client_cert_id
+        local upstream_ssl = router.router_ssl.get_by_id(cert_id)
+        if not upstream_ssl or upstream_ssl.type ~= "client" then
+            local err  = upstream_ssl and
+                "ssl type should be 'client'" or
+                "ssl id [" .. cert_id .. "] not exits"
+            core.log.error("failed to get ssl cert: ", err)
+
+            if is_http then
+                return core.response.exit(502)
+            end
+
+            return ngx_exit(1)
+        end
+
+        core.log.info("matched ssl: ",
+                  core.json.delay_encode(upstream_ssl, true))
+        api_ctx.upstream_ssl = upstream_ssl
     end
 
     if enable_websocket then
@@ -806,14 +831,14 @@ end
 
 function _M.stream_ssl_phase()
     local ngx_ctx = ngx.ctx
-    local api_ctx = ngx_ctx.api_ctx
-
-    if api_ctx == nil then
-        api_ctx = core.tablepool.fetch("api_ctx", 0, 32)
-        ngx_ctx.api_ctx = api_ctx
-    end
+    local api_ctx = core.tablepool.fetch("api_ctx", 0, 32)
+    ngx_ctx.api_ctx = api_ctx
 
     local ok, err = router.router_ssl.match_and_set(api_ctx)
+
+    core.tablepool.release("api_ctx", api_ctx)
+    ngx_ctx.api_ctx = nil
+
     if not ok then
         if err then
             core.log.error("failed to fetch ssl config: ", err)
@@ -970,8 +995,18 @@ end
 
 function _M.stream_log_phase()
     core.log.info("enter stream_log_phase")
-    -- core.ctx.release_vars(api_ctx)
-    plugin.run_plugin("log")
+
+    local api_ctx = plugin.run_plugin("log")
+    if not api_ctx then
+        return
+    end
+
+    core.ctx.release_vars(api_ctx)
+    if api_ctx.plugins then
+        core.tablepool.release("plugins", api_ctx.plugins)
+    end
+
+    core.tablepool.release("api_ctx", api_ctx)
 end
 
 

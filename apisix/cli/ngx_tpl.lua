@@ -57,6 +57,48 @@ env {*name*};
 {% end %}
 {% end %}
 
+{% if use_apisix_openresty then %}
+lua {
+    {% if enabled_stream_plugins["prometheus"] then %}
+    lua_shared_dict prometheus-metrics {* meta.lua_shared_dict["prometheus-metrics"] *};
+    {% end %}
+}
+
+{% if (enabled_stream_plugins["prometheus"] or conf_server) and not enable_http then %}
+http {
+    {% if enabled_stream_plugins["prometheus"] then %}
+    init_worker_by_lua_block {
+        require("apisix.plugins.prometheus.exporter").http_init(true)
+    }
+
+    server {
+        listen {* prometheus_server_addr *};
+
+        access_log off;
+
+        location / {
+            content_by_lua_block {
+                local prometheus = require("apisix.plugins.prometheus.exporter")
+                prometheus.export_metrics(true)
+            }
+        }
+
+        location = /apisix/nginx_status {
+            allow 127.0.0.0/24;
+            deny all;
+            stub_status;
+        }
+    }
+    {% end %}
+
+    {% if conf_server then %}
+    {* conf_server *}
+    {% end %}
+}
+{% end %}
+
+{% end %}
+
 {% if stream_proxy then %}
 stream {
     lua_package_path  "{*extra_lua_path*}$prefix/deps/share/lua/5.1/?.lua;$prefix/deps/share/lua/5.1/?/init.lua;]=]
@@ -164,7 +206,7 @@ stream {
 }
 {% end %}
 
-{% if enable_admin or not (stream_proxy and stream_proxy.only ~= false) then %}
+{% if enable_http then %}
 http {
     # put extra_lua_path in front of the builtin path
     # so user can override the source code
@@ -211,7 +253,7 @@ http {
     lua_shared_dict plugin-limit-count-redis-cluster-slot-lock {* http.lua_shared_dict["plugin-limit-count-redis-cluster-slot-lock"] *};
     {% end %}
 
-    {% if enabled_plugins["prometheus"] then %}
+    {% if enabled_plugins["prometheus"] and not enabled_stream_plugins["prometheus"] then %}
     lua_shared_dict prometheus-metrics {* http.lua_shared_dict["prometheus-metrics"] *};
     {% end %}
 
@@ -460,18 +502,16 @@ http {
 
         location / {
             content_by_lua_block {
-                local prometheus = require("apisix.plugins.prometheus")
+                local prometheus = require("apisix.plugins.prometheus.exporter")
                 prometheus.export_metrics()
             }
         }
 
-        {% if with_module_status then %}
         location = /apisix/nginx_status {
             allow 127.0.0.0/24;
             deny all;
             stub_status;
         }
-        {% end %}
     }
     {% end %}
 
@@ -536,6 +576,10 @@ http {
     }
     {% end %}
 
+    {% if conf_server then %}
+    {* conf_server *}
+    {% end %}
+
     server {
         {% for _, item in ipairs(node_listen) do %}
         listen {* item.ip *}:{* item.port *} default_server {% if item.enable_http2 then %} http2 {% end %} {% if enable_reuseport then %} reuseport {% end %};
@@ -580,14 +624,12 @@ http {
         {% end %}
         # http server configuration snippet ends
 
-        {% if with_module_status then %}
         location = /apisix/nginx_status {
             allow 127.0.0.0/24;
             deny all;
             access_log off;
             stub_status;
         }
-        {% end %}
 
         {% if enable_admin and not admin_server_addr then %}
         location /apisix/admin {

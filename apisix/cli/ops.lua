@@ -21,6 +21,7 @@ local file = require("apisix.cli.file")
 local schema = require("apisix.cli.schema")
 local ngx_tpl = require("apisix.cli.ngx_tpl")
 local cli_ip = require("apisix.cli.ip")
+local snippet = require("apisix.cli.snippet")
 local profile = require("apisix.core.profile")
 local template = require("resty.template")
 local argparse = require("argparse")
@@ -244,17 +245,21 @@ Please modify "admin_key" in conf/config.yaml .
     end
 
     local or_info = util.execute_cmd("openresty -V 2>&1")
-    local with_module_status = true
     if or_info and not or_info:find("http_stub_status_module", 1, true) then
-        stderr:write("'http_stub_status_module' module is missing in ",
-                     "your openresty, please check it out. Without this ",
-                     "module, there will be fewer monitoring indicators.\n")
-        with_module_status = false
+        util.die("'http_stub_status_module' module is missing in ",
+                 "your openresty, please check it out.\n")
     end
 
     local use_apisix_openresty = true
     if or_info and not or_info:find("apisix-nginx-module", 1, true) then
         use_apisix_openresty = false
+    end
+
+    local enable_http = true
+    if not yaml_conf.apisix.enable_admin and yaml_conf.apisix.stream_proxy and
+        yaml_conf.apisix.stream_proxy.only ~= false
+    then
+        enable_http = false
     end
 
     local enabled_discoveries = {}
@@ -284,8 +289,10 @@ Please modify "admin_key" in conf/config.yaml .
         if real_ip_from then
             for _, ip in ipairs(real_ip_from) do
                 local _ip = cli_ip:new(ip)
-                if _ip and _ip:is_loopback() or _ip:is_unspecified() then
-                    pass_real_client_ip = true
+                if _ip then
+                    if _ip:is_loopback() or _ip:is_unspecified() then
+                        pass_real_client_ip = true
+                    end
                 end
             end
         end
@@ -342,6 +349,10 @@ Please modify "admin_key" in conf/config.yaml .
                                              prometheus.export_addr.ip,
                                              9091, prometheus.export_addr.port)
         end
+    end
+
+    if enabled_stream_plugins["prometheus"] and not prometheus_server_addr then
+        util.die("L4 prometheus metric should be exposed via export server\n")
     end
 
     local ip_port_to_check = {}
@@ -528,6 +539,8 @@ Please modify "admin_key" in conf/config.yaml .
         proxy_mirror_timeouts = yaml_conf.plugin_attr["proxy-mirror"].timeout
     end
 
+    local conf_server = snippet.generate_conf_server(yaml_conf)
+
     -- Using template.render
     local sys_conf = {
         use_openresty_1_17 = use_openresty_1_17,
@@ -535,9 +548,9 @@ Please modify "admin_key" in conf/config.yaml .
         lua_cpath = env.pkg_cpath_org,
         os_name = util.trim(util.execute_cmd("uname")),
         apisix_lua_home = env.apisix_home,
-        with_module_status = with_module_status,
         use_apisix_openresty = use_apisix_openresty,
         error_log = {level = "warn"},
+        enable_http = enable_http,
         enabled_discoveries = enabled_discoveries,
         enabled_plugins = enabled_plugins,
         enabled_stream_plugins = enabled_stream_plugins,
@@ -547,6 +560,7 @@ Please modify "admin_key" in conf/config.yaml .
         control_server_addr = control_server_addr,
         prometheus_server_addr = prometheus_server_addr,
         proxy_mirror_timeouts = proxy_mirror_timeouts,
+        conf_server = conf_server,
     }
 
     if not yaml_conf.apisix then
