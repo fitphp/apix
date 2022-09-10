@@ -23,7 +23,7 @@ title: Wasm
 
 APISIX supports Wasm plugins written with [Proxy Wasm SDK](https://github.com/proxy-wasm/spec#sdks).
 
-This plugin requires APISIX to run on [APISIX-Base](./FAQ.md#how-do-i-build-the-apisix-base-environment?), and is under construction.
+This plugin requires APISIX to run on [APISIX-Base](./FAQ.md#how-do-i-build-the-apisix-base-environment), and is under construction.
 Currently, only a few APIs are implemented. Please follow [wasm-nginx-module](https://github.com/api7/wasm-nginx-module) to know the progress.
 
 ## Programming model
@@ -73,7 +73,7 @@ That's all. Now you can use the wasm plugin as a regular plugin.
 For example, enable this plugin on the specified route:
 
 ```shell
-curl -i http://127.0.0.1:9080/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+curl -i http://127.0.0.1:9180/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "uri": "/index.html",
     "plugins": {

@@ -35,7 +35,7 @@ The Redis protocol support allows APISIX to proxy Redis commands, and provide va
 
 :::note
 
-This feature requires APISIX to be run on [APISIX-Base](../FAQ.md#how-do-i-build-the-apisix-base-environment?).
+This feature requires APISIX to be run on [APISIX-Base](../FAQ.md#how-do-i-build-the-apisix-base-environment).
 
 It also requires the data sent from clients are well-formed and sane. Therefore, it should only be used in deployments where both the downstream and upstream are trusted.
 
@@ -86,7 +86,7 @@ Assumed the APISIX is proxying TCP on port `9101`, and the Redis is listening on
 Let's create a Stream Route:
 
 ```shell
-curl http://127.0.0.1:9080/apisix/admin/stream_routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+curl http://127.0.0.1:9180/apisix/admin/stream_routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "upstream": {
         "type": "none",

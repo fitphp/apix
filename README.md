@@ -43,7 +43,7 @@ The technical architecture of Apache APISIX:
 
 - Mailing List: Mail to dev-subscribe@apisix.apache.org, follow the reply to subscribe to the mailing list.
 - QQ Group - 552030619, 781365357
-- Slack Workspace - [invitation link](https://join.slack.com/t/the-asf/shared_invite/zt-vlfbf7ch-HkbNHiU_uDlcH_RvaHv9gQ) (Please open an [issue](https://apisix.apache.org/docs/general/submit-issue) if this link is expired), and then join the #apisix channel (Channels -> Browse channels -> search for "apisix").
+- Slack Workspace - [invitation link](https://join.slack.com/t/the-asf/shared_invite/zt-1egxjz7lw-lWl142XNDopj4FlqNMUM5g) (Please open an [issue](https://apisix.apache.org/docs/general/submit-issue) if this link is expired), and then join the #apisix channel (Channels -> Browse channels -> search for "apisix").
 - ![Twitter Follow](https://img.shields.io/twitter/follow/ApacheAPISIX?style=social) - follow and interact with us using hashtag `#ApacheAPISIX`
 - [Documentation](https://apisix.apache.org/docs/)
 - [Discussions](https://github.com/apache/apisix/discussions)
@@ -75,7 +75,7 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
 - **Full Dynamic**
 
   - [Hot Updates And Hot Plugins](docs/en/latest/terminology/plugin.md): Continuously updates its configurations and plugins without restarts!
-  - [Proxy Rewrite](docs/en/latest/plugins/proxy-rewrite.md): Support rewrite the `host`, `uri`, `schema`, `enable_websocket`, `headers` of the request before send to upstream.
+  - [Proxy Rewrite](docs/en/latest/plugins/proxy-rewrite.md): Support rewrite the `host`, `uri`, `schema`, `method`, `headers` of the request before send to upstream.
   - [Response Rewrite](docs/en/latest/plugins/response-rewrite.md): Set customized response status code, body and header to the client.
   - Dynamic Load Balancing: Round-robin load balancing with weight.
   - Hash-based Load Balancing: Load balance with consistent hashing sessions.
@@ -135,6 +135,8 @@ A/B testing, canary release, blue-green deployment, limit rate, defense against 
   - [Fault Injection](docs/en/latest/plugins/fault-injection.md)
   - [REST Admin API](docs/en/latest/admin-api.md): Using the REST Admin API to control Apache APISIX, which only allows 127.0.0.1 access by default, you can modify the `allow_admin` field in `conf/config.yaml` to specify a list of IPs that are allowed to call the Admin API. Also, note that the Admin API uses key auth to verify the identity of the caller. **The `admin_key` field in `conf/config.yaml` needs to be modified before deployment to ensure security**.
   - External Loggers: Export access logs to external log management tools. ([HTTP Logger](docs/en/latest/plugins/http-logger.md), [TCP Logger](docs/en/latest/plugins/tcp-logger.md), [Kafka Logger](docs/en/latest/plugins/kafka-logger.md), [UDP Logger](docs/en/latest/plugins/udp-logger.md), [RocketMQ Logger](docs/en/latest/plugins/rocketmq-logger.md), [SkyWalking Logger](docs/en/latest/plugins/skywalking-logger.md), [Alibaba Cloud Logging(SLS)](docs/en/latest/plugins/sls-logger.md), [Google Cloud Logging](docs/en/latest/plugins/google-cloud-logging.md), [Splunk HEC Logging](docs/en/latest/plugins/splunk-hec-logging.md), [File Logger](docs/en/latest/plugins/file-logger.md), [SolarWinds Loggly Logging](docs/en/latest/plugins/loggly.md))
+  - [ClickHouse](docs/en/latest/plugins/clickhouse-logger.md): push logs to ClickHouse.
+  - [Elasticsearch](docs/en/latest/plugins/elasticsearch-logger.md): push logs to Elasticsearch.
   - [Datadog](docs/en/latest/plugins/datadog.md): push custom metrics to the DogStatsD server, comes bundled with [Datadog agent](https://docs.datadoghq.com/agent/), over the UDP protocol. DogStatsD basically is an implementation of StatsD protocol which collects the custom metrics for Apache APISIX agent, aggregates it into a single data point and sends it to the configured Datadog server.
   - [Helm charts](https://github.com/apache/apisix-helm-chart)
   - [HashiCorp Vault](https://www.vaultproject.io/): Support secret management solution for accessing secrets from Vault secure storage backed in a low trust environment. Currently, RS256 keys (public-private key pairs) or secret keys can be linked from vault in [jwt-auth](docs/en/latest/plugins/jwt-auth.md#enable-jwt-auth-with-vault-compatibility) authentication plugin.
@@ -187,7 +189,7 @@ Using AWS's eight-core server, APISIX's QPS reaches 140,000 with a latency of on
 
 [Benchmark script](benchmark/run.sh) has been open sourced, welcome to try and contribute.
 
-[The APISIX APISIX Gateway also works perfectly in AWS graviton3 C7g.](https://apisix.apache.org/blog/2022/06/07/installation-performance-test-of-apigateway-apisix-on-aws-graviton3)
+[APISIX also works perfectly in AWS graviton3 C7g.](https://apisix.apache.org/blog/2022/06/07/installation-performance-test-of-apigateway-apisix-on-aws-graviton3)
 
 ## Contributor Over Time
 
@@ -199,7 +201,7 @@ Using AWS's eight-core server, APISIX's QPS reaches 140,000 with a latency of on
 
 - [European eFactory Platform: API Security Gateway – Using APISIX in the eFactory Platform](https://www.efactory-project.eu/post/api-security-gateway-using-apisix-in-the-efactory-platform)
 - [Copernicus Reference System Software](https://github.com/COPRS/infrastructure/wiki/Networking-trade-off)
-- [More Stories](https://apisix.apache.org/blog/tags/user-case)
+- [More Stories](https://apisix.apache.org/blog/tags/case-studies/)
 
 ## Who Uses APISIX API Gateway?
 

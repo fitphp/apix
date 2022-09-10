@@ -36,7 +36,9 @@ title: TLS 双向认证
 2. 修改 `conf/config.yaml` 中的配置项：
 
 ```yaml
-  port_admin: 9180
+  admin_listen:
+    ip: 127.0.0.1
+    port: 9180
   https_admin: true
 
   admin_api_mtls:
@@ -69,10 +71,14 @@ curl --cacert /data/certs/mtls_ca.crt --key /data/certs/mtls_client.key --cert /
 你需要构建 [APISIX-Base](./FAQ.md#如何构建-APISIX-Base-环境？)，并且需要在配置文件中设定 `etcd.tls` 来使 ETCD 的双向认证功能正常工作。
 
 ```yaml
-etcd:
-  tls:
-    cert: /data/certs/etcd_client.pem       # path of certificate used by the etcd client
-    key: /data/certs/etcd_client.key        # path of key used by the etcd client
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  etcd:
+    tls:
+      cert: /data/certs/etcd_client.pem       # path of certificate used by the etcd client
+      key: /data/certs/etcd_client.key        # path of key used by the etcd client
 ```
 
 如果 APISIX 不信任 etcd server 使用的 CA 证书，我们需要设置 CA 证书。
@@ -126,7 +132,7 @@ if len(sys.argv) >= 5:
         reqParam["client"]["ca"] = clientCert
     if len(sys.argv) >= 6:
         reqParam["client"]["depth"] = int(sys.argv[5])
-resp = requests.put("http://127.0.0.1:9080/apisix/admin/ssl/1", json=reqParam, headers={
+resp = requests.put("http://127.0.0.1:9180/apisix/admin/ssls/1", json=reqParam, headers={
     "X-API-KEY": api_key,
 })
 print(resp.status_code)
@@ -154,7 +160,7 @@ curl --resolve 'mtls.test.com:<APISIX_HTTPS_PORT>:<APISIX_URL>' "https://<APISIX
 
 在配置 upstream 资源时，可以使用参数 `tls.client_cert` 和 `tls.client_key` 来配置 APISIX 用于与上游进行通讯时使用的证书。可参考 [Upstream API 文档](./admin-api.md#upstream)。
 
-该功能需要 APISIX 运行在 [APISIX-Base](./FAQ.md#如何构建-APISIX-Base-环境？) 上。
+该功能需要 APISIX 运行在 [APISIX-Base](./FAQ.md#如何构建-apisix-base-环境) 上。
 
 下面是一个与配置 SSL 时相似的 Python 脚本，可为一个已存在的 upstream 资源配置双向认证。如果需要，可修改 API 地址和 API Key。
 
@@ -183,7 +189,7 @@ reqParam = {
     },
 }
 
-resp = requests.patch("http://127.0.0.1:9080/apisix/admin/upstreams/"+id, json=reqParam, headers={
+resp = requests.patch("http://127.0.0.1:9180/apisix/admin/upstreams/"+id, json=reqParam, headers={
     "X-API-KEY": api_key,
 })
 print(resp.status_code)

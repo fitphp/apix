@@ -33,6 +33,13 @@ my $nginx_binary = $ENV{'TEST_NGINX_BINARY'} || 'nginx';
 $ENV{TEST_NGINX_HTML_DIR} ||= html_dir();
 $ENV{TEST_NGINX_FAST_SHUTDOWN} ||= 1;
 
+Test::Nginx::Socket::set_http_config_filter(sub {
+    my $config = shift;
+    my $snippet = `$apisix_home/t/bin/gen_snippet.lua conf_server`;
+    $config .= $snippet;
+    return $config;
+});
+
 sub read_file($) {
     my $infile = shift;
     open my $in, "$apisix_home/$infile"
@@ -90,6 +97,8 @@ my $ssl_ecc_crt = read_file("t/certs/apisix_ecc.crt");
 my $ssl_ecc_key = read_file("t/certs/apisix_ecc.key");
 my $test2_crt = read_file("t/certs/test2.crt");
 my $test2_key = read_file("t/certs/test2.key");
+my $etcd_pem = read_file("t/certs/etcd.pem");
+my $etcd_key = read_file("t/certs/etcd.key");
 $user_yaml_config = <<_EOC_;
 apisix:
   node_listen: 1984
@@ -104,9 +113,13 @@ my $etcd_enable_auth = $ENV{"ETCD_ENABLE_AUTH"} || "false";
 
 if ($etcd_enable_auth eq "true") {
     $user_yaml_config .= <<_EOC_;
-etcd:
-  user: root
-  password: 5tHkHhYkjr6cQY
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  etcd:
+    user: root
+    password: 5tHkHhYkjr6cQY
 _EOC_
 }
 
@@ -477,6 +490,12 @@ _EOC_
         dns_resolver = $dns_addrs_tbl_str,
     }
     apisix.http_init(args)
+
+    -- set apisix_lua_home into constans module
+    -- it may be used by plugins to determine the work path of apisix
+    local constants = require("apisix.constants")
+    constants.apisix_lua_home = "$apisix_home"
+
     $extra_init_by_lua
 _EOC_
 
@@ -561,17 +580,11 @@ _EOC_
         require("apisix").http_init_worker()
         $extra_init_worker_by_lua
     }
-_EOC_
 
-    if ($version !~ m/\/1.17.8/) {
-    $http_config .= <<_EOC_;
     exit_worker_by_lua_block {
         require("apisix").http_exit_worker()
     }
-_EOC_
-    }
 
-    $http_config .= <<_EOC_;
     log_format main escape=default '\$remote_addr - \$remote_user [\$time_local] \$http_host "\$request" \$status \$body_bytes_sent \$request_time "\$http_referer" "\$http_user_agent" \$upstream_addr \$upstream_status \$upstream_response_time "\$upstream_scheme://\$upstream_host\$upstream_uri"';
 
     # fake server, only for test
@@ -604,6 +617,7 @@ _EOC_
             more_clear_headers Date;
         }
 
+        # this configuration is needed as error_page is configured in http block
         location \@50x.html {
             set \$from_error_page 'true';
             content_by_lua_block {
@@ -850,6 +864,10 @@ $ssl_ecc_key
 $test2_crt
 >>> ../conf/cert/test2.key
 $test2_key
+>>> ../conf/cert/etcd.pem
+$etcd_pem
+>>> ../conf/cert/etcd.key
+$etcd_key
 $user_apisix_yaml
 _EOC_
 
