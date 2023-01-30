@@ -391,6 +391,11 @@ _EOC_
     lua_shared_dict lrucache-lock-stream 10m;
     lua_shared_dict plugin-limit-conn-stream 10m;
     lua_shared_dict etcd-cluster-health-check-stream 10m;
+    lua_shared_dict worker-events-stream 10m;
+
+    lua_shared_dict kubernetes-stream 1m;
+    lua_shared_dict kubernetes-first-stream 1m;
+    lua_shared_dict kubernetes-second-stream 1m;
 
     upstream apisix_backend {
         server 127.0.0.1:1900;
@@ -416,6 +421,7 @@ _EOC_
 _EOC_
 
     my $stream_extra_init_by_lua = $block->stream_extra_init_by_lua // "";
+    my $stream_extra_init_worker_by_lua = $block->stream_extra_init_worker_by_lua // "";
 
     $stream_config .= <<_EOC_;
     init_by_lua_block {
@@ -424,6 +430,7 @@ _EOC_
     }
     init_worker_by_lua_block {
         apisix.stream_init_worker()
+        $stream_extra_init_worker_by_lua
     }
 
     $extra_stream_config
@@ -531,6 +538,7 @@ _EOC_
 
     lua_shared_dict plugin-limit-req 10m;
     lua_shared_dict plugin-limit-count 10m;
+    lua_shared_dict plugin-limit-count-reset-header 10m;
     lua_shared_dict plugin-limit-conn 10m;
     lua_shared_dict internal-status 10m;
     lua_shared_dict upstream-healthcheck 32m;

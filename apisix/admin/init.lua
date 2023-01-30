@@ -57,7 +57,7 @@ local resources = {
     plugin_metadata = require("apisix.admin.plugin_metadata"),
     plugin_configs  = require("apisix.admin.plugin_config"),
     consumer_groups  = require("apisix.admin.consumer_group"),
-    kms             = require("apisix.admin.kms"),
+    secrets             = require("apisix.admin.secrets"),
 }
 
 
@@ -198,12 +198,19 @@ local function run()
         end
     end
 
-    local code, data = resource[method](seg_id, req_body, seg_sub_path,
-                                        uri_args)
+    local code, data
+    if seg_res == "routes" then
+        code, data = resource[method](resource, seg_id, req_body, seg_sub_path, uri_args)
+    else
+        code, data = resource[method](seg_id, req_body, seg_sub_path, uri_args)
+    end
+
     if code then
         if method == "get" and plugin.enable_data_encryption then
             if seg_res == "consumers" then
                 utils.decrypt_params(plugin.decrypt_conf, data, core.schema.TYPE_CONSUMER)
+            elseif seg_res == "plugin_metadata" then
+                utils.decrypt_params(plugin.decrypt_conf, data, core.schema.TYPE_METADATA)
             else
                 utils.decrypt_params(plugin.decrypt_conf, data)
             end
