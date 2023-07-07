@@ -858,7 +858,7 @@ In addition to the equalization algorithm selections, Upstream also supports pas
 | checks                      | optional                                    | Configures the parameters for the [health check](./tutorials/health-check.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |                                                                                                                                            |
 | retries                     | optional                                    | Sets the number of retries while passing the request to Upstream using the underlying Nginx mechanism. Set according to the number of available backend nodes by default. Setting this to `0` disables retry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |                                                                                                                                            |
 | retry_timeout               | optional                                    | Timeout to continue with retries. Setting this to `0` disables the retry timeout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |                                                                                                                                            |
-| timeout                     | optional                                    | Sets the timeout (in seconds) for connecting to, and sending and receiving messages to and from the Upstream.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |                                                                                                                                            |
+| timeout                     | optional                                    | Sets the timeout (in seconds) for connecting to, and sending and receiving messages to and from the Upstream. | `{"connect": 0.5,"send": 0.5,"read": 0.5}` |
 | name                        | optional                                    | Identifier for the Upstream.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |                                                                                                                                            |
 | desc                        | optional                                    | Description of usage scenarios.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |                                                                                                                                            |
 | pass_host                   | optional                                    | Configures the `host` when the request is forwarded to the upstream. Can be one of `pass`, `node` or `rewrite`. Defaults to `pass` if not specified. `pass`- transparently passes the client's host to the Upstream. `node`- uses the host configured in the node of the Upstream. `rewrite`- Uses the value configured in `upstream_host`.                                                                                                                                                                                                                                                                                                                                                                                      |                                                                                                                                            |
@@ -1343,7 +1343,7 @@ You can use the `/apisix/admin/plugins?all=true` API to get all properties of al
 
 Each Plugin has the attributes `name`, `priority`, `type`, `schema`, `consumer_schema` and `version`.
 
-Defaults to only HTTP Plugins. If you need to get attributes from stream Plugins, use `/apisix/admin/plugins?all=true&subsystem=stream`.
+Defaults to only L7 Plugins. If you need to get attributes of L4 / Stream Plugins, use `/apisix/admin/plugins?all=true&subsystem=stream`.
 
 :::
 
@@ -1383,8 +1383,8 @@ Stream Route resource request address:  /apisix/admin/stream_routes/{id}
 | ----------- | -------- | -------- | ------------------------------------------------------------------- | ----------------------------- |
 | upstream    | False    | Upstream | Configuration of the [Upstream](./terminology/upstream.md). |                               |
 | upstream_id | False    | Upstream | Id of the [Upstream](terminology/upstream.md) service.      |                               |
-| remote_addr | False    | IP/CIDR  | Filters Upstream forwards by matching with client IP.               | "127.0.0.1/32" or "127.0.0.1" |
-| server_addr | False    | IP/CIDR  | Filters Upstream forwards by matching with APISIX Server IP.        | "127.0.0.1/32" or "127.0.0.1" |
+| remote_addr | False    | IPv4, IPv4 CIDR, IPv6  | Filters Upstream forwards by matching with client IP.               | "127.0.0.1" or "127.0.0.1/32" or "::1" |
+| server_addr | False    | IPv4, IPv4 CIDR, IPv6  | Filters Upstream forwards by matching with APISIX Server IP.        | "127.0.0.1" or "127.0.0.1/32" or "::1" |
 | server_port | False    | Integer  | Filters Upstream forwards by matching with APISIX Server port.      | 9090                          |
 | sni         | False    | Host     | Server Name Indication.                                             | "test.com"                    |
 | protocol.name | False    | String | Name of the protocol proxyed by xRPC framework.                     | "redis"                    |
@@ -1453,3 +1453,31 @@ HTTP/1.1 200 OK
 ### Response Parameters
 
 Currently, the response is returned from etcd.
+
+## Proto
+
+Proto is used to store protocol buffers so that APISIX can communicate in gRPC.
+
+See [grpc-transcode plugin](./plugins/grpc-transcode.md#enabling-the-plugin) doc for more examples.
+
+### Proto API
+
+Proto resource request address: /apisix/admin/protos/{id}
+
+### Request Methods
+
+| Method | Request URI                      | Request Body | Description                                     |
+| ------ | -------------------------------- | ------------ | ----------------------------------------------- |
+| GET    | /apisix/admin/protos      | NULL         | List all Protos.  |
+| GET    | /apisix/admin/protos/{id} | NULL         | Get a Proto by id.     |
+| PUT    | /apisix/admin/protos/{id} | {...}        | Create or update a Proto with the given id.        |
+| POST   | /apisix/admin/protos      | {...}        | Create a Proto with a random id.         |
+| DELETE | /apisix/admin/protos/{id} | NULL         | Delete Proto by id.                 |
+
+### Request Body Parameters
+
+| Parameter   | Required | Type     | Description                                                         | Example                       |
+| ----------- | -------- | -------- | ------------------------------------------------------------------- | ----------------------------- |
+| content   | True    | String | content of `.proto` or `.pb` files | See [here](./plugins/grpc-transcode.md#enabling-the-plugin)         |
+| create_time | False    | Epoch timestamp (in seconds) of the created time. If missing, this field will be populated automatically.             | 1602883670                                       |
+| update_time | False    | Epoch timestamp (in seconds) of the updated time. If missing, this field will be populated automatically.             | 1602883670                                       |

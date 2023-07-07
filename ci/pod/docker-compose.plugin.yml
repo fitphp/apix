@@ -143,6 +143,15 @@ services:
       - ./t/certs:/certs
 
 
+  ## Grafana Loki
+  loki:
+    image: grafana/loki:2.8.0
+    command: -config.file=/etc/loki/local-config.yaml -auth.enabled -querier.multi-tenant-queries-enabled
+    ports:
+      - "3100:3100"
+    networks:
+      - loki_net
+
   rocketmq_namesrv:
     image: apacherocketmq/rocketmq:4.6.0
     container_name: rmqnamesrv
@@ -186,18 +195,6 @@ services:
         target: /data.json
     networks:
       opa_net:
-
-  # Splunk HEC Logging Service
-  splunk:
-    image: splunk/splunk:8.2.3
-    restart: unless-stopped
-    ports:
-      - "18088:8088"
-    environment:
-      SPLUNK_PASSWORD: "ApacheAPISIX@666"
-      SPLUNK_START_ARGS: "--accept-license"
-      SPLUNK_HEC_TOKEN: "BD274822-96AA-4DA6-90EC-18940FB2414C"
-      SPLUNK_HEC_SSL: "False"
 
   # Elasticsearch Logger Service
   elasticsearch-noauth:
@@ -319,10 +316,31 @@ services:
       - ./ci/pod/vector:/etc/vector/
       - ./t/certs:/certs
     ports:
-      - '3000:3000'
+      - '3000:3000' #tcp logger
+      - '8127:8127/udp'
       - '43000:43000'
+      - '5140:5140'
+      - "18088:18088" # For splunk logging tests
+      - '5150:5150/udp'
+      - "3001:3001" #http logger
     networks:
       vector_net:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.4.2-alpine
+    container_name: clickhouse
+    ports:
+      - '8123:8123'
+    networks:
+      clickhouse_net:
+
+  clickhouse2:
+    image: clickhouse/clickhouse-server:23.4.2-alpine
+    container_name: clickhouse2
+    ports:
+      - '8124:8123'
+    networks:
+      clickhouse_net:
 
 networks:
   apisix_net:
@@ -331,3 +349,5 @@ networks:
   rocketmq_net:
   opa_net:
   vector_net:
+  clickhouse_net:
+  loki_net:

@@ -65,7 +65,7 @@ deployment:
             port: 9180                  # Admin API 监听的 端口，必须使用与 node_listen 不同的端口。
 ```
 
-### 使用环境变量 {$using-environment-variables}
+### 使用环境变量 {#using-environment-variables}
 
 要通过环境变量进行配置，可以使用 `${{VAR}}` 语法。例如：
 
@@ -118,7 +118,7 @@ APISIX 在 v3 版本对响应体做了以下调整：
 
 返回单个资源：
 
-    ```json
+```json
     {
     "modifiedIndex": 2685183,
     "value": {
@@ -128,11 +128,11 @@ APISIX 在 v3 版本对响应体做了以下调整：
     "key": "/apisix/routes/1",
     "createdIndex": 2684956
     }
-    ```
+```
 
 返回多个资源：
 
-    ```json
+```json
     {
     "list": [
         {
@@ -156,7 +156,7 @@ APISIX 在 v3 版本对响应体做了以下调整：
     ],
     "total": 2
     }
-    ```
+```
 
 ### 支持分页查询 {#support-paging-query}
 
@@ -871,7 +871,7 @@ APISIX 的 Upstream 除了基本的负载均衡算法选择外，还支持对上
 | checks         | 否                                             | health_checker | 配置健康检查的参数，详细信息请参考 [health-check](health-check.md)。                                                                                                                                                                                                                                                                                               |                                                  |
 | retries        | 否                                             | 整型           | 使用 NGINX 重试机制将请求传递给下一个上游，默认启用重试机制且次数为后端可用的节点数量。如果指定了具体重试次数，它将覆盖默认值。当设置为 `0` 时，表示不启用重试机制。                                                                                                                                                                                                 |                                                  |
 | retry_timeout  | 否                                             | number         | 限制是否继续重试的时间，若之前的请求和重试请求花费太多时间就不再继续重试。当设置为 `0` 时，表示不启用重试超时机制。                                                                                                                                                                                                 |                                                  |
-| timeout        | 否                                             | 超时时间对象   | 设置连接、发送消息、接收消息的超时时间，以秒为单位。                                                                                                                                                                                                                                                                                                      |                                                  |
+| timeout        | 否                                             | 超时时间对象   | 设置连接、发送消息、接收消息的超时时间，以秒为单位。| `{"connect": 0.5,"send": 0.5,"read": 0.5}` |
 | hash_on        | 否                                             | 辅助           | `hash_on` 支持的类型有 `vars`（NGINX 内置变量），`header`（自定义 header），`cookie`，`consumer`，默认值为 `vars`。                                                                                                                                                                                                                                           |
 | name           | 否                                             | 辅助           | 标识上游服务名称、使用场景等。                                                                                                                                                                                                                                                                                                                              |                                                  |
 | desc           | 否                                             | 辅助           | 上游服务描述、使用场景等。                                                                                                                                                                                                                                                                                                                                  |                                                  |
@@ -1358,7 +1358,7 @@ Plugin 资源请求地址：/apisix/admin/plugins/{plugin_name}
 
 你可以使用 `/apisix/admin/plugins?all=true` 接口获取所有插件的所有属性，每个插件包括 `name`，`priority`，`type`，`schema`，`consumer_schema` 和 `version`。
 
-默认情况下，该接口只返回 HTTP 插件。如果你需要获取 Stream 插件，需要使用 `/apisix/admin/plugins?all=true&subsystem=stream`。
+默认情况下，该接口只返回 L7 插件。如果你需要获取 L4 / Stream 插件，需要使用 `/apisix/admin/plugins?all=true&subsystem=stream`。
 
 :::
 
@@ -1386,11 +1386,74 @@ Plugin 资源请求地址：/apisix/admin/stream_routes/{id}
 | ---------------- | ------| -------- | ------------------------------------------------------------------------------| ------  |
 | upstream         | 否    | Upstream | Upstream 配置，详细信息请参考 [Upstream](terminology/upstream.md)。             |         |
 | upstream_id      | 否    | Upstream | 需要使用的 Upstream id，详细信息请 [Upstream](terminology/upstream.md)。       |         |
-| remote_addr      | 否    | IP/CIDR  | 过滤选项：如果客户端 IP 匹配，则转发到上游                                      | "127.0.0.1/32" 或 "127.0.0.1" |
-| server_addr      | 否    | IP/CIDR  | 过滤选项：如果 APISIX 服务器的 IP 与 `server_addr` 匹配，则转发到上游。         | "127.0.0.1/32" 或 "127.0.0.1" |
+| remote_addr      | 否    | IPv4, IPv4 CIDR, IPv6  | 过滤选项：如果客户端 IP 匹配，则转发到上游                                      | "127.0.0.1" 或 "127.0.0.1/32" 或 "::1" |
+| server_addr      | 否    | IPv4, IPv4 CIDR, IPv6  | 过滤选项：如果 APISIX 服务器的 IP 与 `server_addr` 匹配，则转发到上游。         | "127.0.0.1" 或 "127.0.0.1/32" 或 "::1" |
 | server_port      | 否    | 整数     | 过滤选项：如果 APISIX 服务器的端口 与 `server_port` 匹配，则转发到上游。        | 9090  |
 | sni              | 否    | Host     | 服务器名称。                                                                   | "test.com"     |
 | protocol.name    | 否    | 字符串   | xRPC 框架代理的协议的名称。                                                    | "redis"        |
 | protocol.conf    | 否    | 配置     | 协议特定的配置。                                                               |                    |
 
 你可以查看 [Stream Proxy](./stream-proxy.md#更多-route-匹配选项) 了解更多过滤器的信息。
+
+## Secret
+
+Secret 指的是 `Secrets Management`（密钥管理），可以使用任何支持的密钥管理器，例如 `vault`。
+
+### 请求地址 {#secret-config-uri}
+
+Secret 资源请求地址：/apisix/admin/secrets/{secretmanager}/{id}
+
+### 请求方法 {#secret-config-request-methods}
+
+| 名称 | 请求 URI                          | 请求 body | 描述                                        |
+| :--: | :----------------------------: | :---: | :---------------------------------------: |
+| GET  | /apisix/admin/secrets            | NULL  | 获取所有 secret 的列表。                  |
+| GET  | /apisix/admin/secrets/{manager}/{id} | NULL  | 根据 id 获取指定的 secret。           |
+| PUT  | /apisix/admin/secrets/{manager}            | {...} | 创建新的 secret 配置。                              |
+| DELETE | /apisix/admin/secrets/{manager}/{id} | NULL   | 删除具有指定 id 的 secret。 |
+| PATCH  | /apisix/admin/secrets/{manager}/{id}        | {...} | 更新指定 secret 的选定属性。如果要删除一个属性，可以将该属性的值设置为 null。|
+| PATCH  | /apisix/admin/secrets/{manager}/{id}/{path} | {...} | 更新路径中指定的属性。其他属性的值保持不变。
+
+### body 请求参数 {#secret-config-body-requset-parameters}
+
+当 `{secretmanager}` 是 `vault` 时：
+
+| 名称  | 必选项 | 类型        | 描述                                                                                                        | 例子                                          |
+| ----------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| uri    | 是     | URI        |  Vault 服务器的 URI                                                 |                                                  |
+| prefix    | 是    | 字符串       | 密钥前缀
+| token     | 是    | 字符串       | Vault 令牌 |                                                  |
+
+配置示例：
+
+```shell
+{
+    "uri": "https://localhost/vault",
+    "prefix": "/apisix/kv",
+    "token": "343effad"
+}
+
+```
+
+使用示例：
+
+```shell
+curl -i http://127.0.0.1:9180/apisix/admin/secrets/vault/test2 \
+-H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+    "uri": "http://xxx/get",
+    "prefix" : "apisix",
+    "token" : "apisix"
+}'
+```
+
+```shell
+HTTP/1.1 200 OK
+...
+
+{"key":"\/apisix\/secrets\/vault\/test2","value":{"id":"vault\/test2","token":"apisix","prefix":"apisix","update_time":1669625828,"create_time":1669625828,"uri":"http:\/\/xxx\/get"}}
+```
+
+### 应答参数 {#secret-config-response-parameters}
+
+当前的响应是从 etcd 返回的。
