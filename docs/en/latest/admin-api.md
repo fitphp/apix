@@ -103,6 +103,46 @@ deployment:
 
 This will find the environment variable `ADMIN_KEY` first, and if it does not exist, it will use `edd1c9f034335f136f87ad84b625c8f1` as the default value.
 
+You can also specify environment variables in yaml keys. This is specifically useful in the `standalone` [mode](./deployment-modes.md#standalone) where you can specify the upstream nodes as follows:
+
+```yaml title="./conf/apisix.yaml"
+routes:
+  -
+    uri: "/test"
+    upstream:
+      nodes:
+        "${{HOST_IP}}:${{PORT}}": 1
+      type: roundrobin
+#END
+```
+
+### Force Delete
+
+By default, the Admin API checks for references between resources and will refuse to delete resources in use.
+
+You can make a force deletion by adding the request argument `force=true` to the delete request, for example:
+
+```bash
+$ curl http://127.0.0.1:9180/apisix/admin/upstreams/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '{
+    "nodes": {
+        "127.0.0.1:8080": 1
+    },
+    "type": "roundrobin"
+}'
+$ curl http://127.0.0.1:9180/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '{
+    "uri": "/*",
+    "upstream_id": 1
+}'
+{"value":{"priority":0,"upstream_id":1,"uri":"/*","create_time":1689038794,"id":"1","status":1,"update_time":1689038916},"key":"/apisix/routes/1"}
+
+$ curl http://127.0.0.1:9180/apisix/admin/upstreams/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X DELETE
+{"error_msg":"can not delete this upstream, route [1] is still using it now"}
+$ curl "http://127.0.0.1:9180/apisix/admin/upstreams/1?force=anyvalue" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X DELETE
+{"error_msg":"can not delete this upstream, route [1] is still using it now"}
+$ curl "http://127.0.0.1:9180/apisix/admin/upstreams/1?force=true" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X DELETE
+{"deleted":"1","key":"/apisix/upstreams/1"}
+```
+
 ## V3 new feature
 
 The Admin API has made some breaking changes in V3 version, as well as supporting additional features.
@@ -236,6 +276,10 @@ curl 'http://127.0.0.1:9180/apisix/admin/routes?name=test&uri=foo&label=' \
 ### Route API
 
 Route resource request address: /apisix/admin/routes/{id}?ttl=0
+
+### Quick Note on ID Syntax
+
+ID's as a text string must be of a length between 1 and 64 characters and they should only contain uppercase, lowercase, numbers and no special characters apart from dashes ( - ), periods ( . ) and underscores ( _ ). For integer values they simply must have a minimum character count of 1.
 
 ### Request Methods
 
@@ -831,6 +875,8 @@ An Upstream configuration can be directly bound to a Route or a Service, but the
 
 Upstream resource request address: /apisix/admin/upstreams/{id}
 
+For notes on ID syntax please refer to: [ID Syntax](#quick-note-on-id-syntax)
+
 ### Request Methods
 
 | Method | Request URI                         | Request Body | Description                                                                                                                      |
@@ -1140,6 +1186,8 @@ Currently, the response is returned from etcd.
 
 SSL resource request address: /apisix/admin/ssls/{id}
 
+For notes on ID syntax please refer to: [ID Syntax](#quick-note-on-id-syntax)
+
 ### Request Methods
 
 | Method | Request URI            | Request Body | Description                                     |
@@ -1167,6 +1215,7 @@ SSL resource request address: /apisix/admin/ssls/{id}
 | update_time  | False    | Auxiliary                | Epoch timestamp (in seconds) of the updated time. If missing, this field will be populated automatically.         | 1602883670                                       |
 | type         | False    | Auxiliary            | Identifies the type of certificate, default  `server`.                                                                             | `client` Indicates that the certificate is a client certificate, which is used when APISIX accesses the upstream; `server` Indicates that the certificate is a server-side certificate, which is used by APISIX when verifying client requests.     |
 | status       | False    | Auxiliary                | Enables the current SSL. Set to `1` (enabled) by default.                                                      | `1` to enable, `0` to disable                    |
+| ssl_protocols | False    | An array of ssl protocols               | It is used to control the SSL/TLS protocol version used between servers and clients. See [SSL Protocol](./ssl-protocol.md) for more examples.                  |                `["TLSv1.2", "TLSv2.3"]`                                  |
 
 Example Configuration:
 
@@ -1318,6 +1367,14 @@ Plugin resource request address: /apisix/admin/plugins/{plugin_name}
 
 The Plugin ({plugin_name}) of the data structure.
 
+### Request Arguments
+
+| Name      | Description                   | Default |
+| --------- | ----------------------------- | ------- |
+| subsystem | The subsystem of the Plugins. | http    |
+
+The plugin can be filtered on subsystem so that the ({plugin_name}) is searched in the subsystem passed through query params.
+
 ### Example API usage:
 
 ```shell
@@ -1330,7 +1387,7 @@ curl "http://127.0.0.1:9180/apisix/admin/plugins/list" \
 ```
 
 ```shell
-curl "http://127.0.0.1:9180/apisix/admin/plugins/key-auth" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'
+curl "http://127.0.0.1:9180/apisix/admin/plugins/key-auth?subsystem=http" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'
 ```
 
 ```json
@@ -1339,25 +1396,9 @@ curl "http://127.0.0.1:9180/apisix/admin/plugins/key-auth" -H 'X-API-KEY: ed
 
 :::tip
 
-You can use the `/apisix/admin/plugins?all=true` API to get all properties of all plugins.
-
-Each Plugin has the attributes `name`, `priority`, `type`, `schema`, `consumer_schema` and `version`.
-
-Defaults to only L7 Plugins. If you need to get attributes of L4 / Stream Plugins, use `/apisix/admin/plugins?all=true&subsystem=stream`.
+You can use the `/apisix/admin/plugins?all=true` API to get all properties of all plugins. This API will be deprecated soon.
 
 :::
-
-### Request Methods
-
-| Method | Request URI                    | Request Body | Description                              |
-| ------ | ------------------------------ | ------------ | ---------------------------------------- |
-| GET    | /apisix/admin/plugins?all=true | NULL         | Fetches all attributes from all Plugins. |
-
-### Request Arguments
-
-| Name      | Description                   | Default |
-| --------- | ----------------------------- | ------- |
-| subsystem | The subsystem of the Plugins. | http    |
 
 ## Stream Route
 
