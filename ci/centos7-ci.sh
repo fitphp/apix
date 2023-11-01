@@ -33,7 +33,7 @@ install_dependencies() {
 
     # install openresty to make apisix's rpm test work
     yum install -y yum-utils && yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
-    yum install -y openresty-1.21.4.1 openresty-debug-1.21.4.1 openresty-openssl111-debug-devel pcre pcre-devel
+    yum install -y openresty-1.21.4.2 openresty-debug-1.21.4.2 openresty-openssl111-debug-devel pcre pcre-devel
 
     # install luarocks
     ./utils/linux-install-luarocks.sh
@@ -58,23 +58,15 @@ install_dependencies() {
     cd t/grpc_server_example
 
     CGO_ENABLED=0 go build
-    ./grpc_server_example \
-        -grpc-address :50051 -grpcs-address :50052 -grpcs-mtls-address :50053 -grpc-http-address :50054 \
-        -crt ../certs/apisix.crt -key ../certs/apisix.key -ca ../certs/mtls_ca.crt \
-        > grpc_server_example.log 2>&1 || (cat grpc_server_example.log && exit 1)&
-
     cd ../../
-    # wait for grpc_server_example to fully start
-    sleep 3
+
+    start_grpc_server_example
 
     # installing grpcurl
     install_grpcurl
 
     # install nodejs
     install_nodejs
-
-    # install rust
-    install_rust
 
     # grpc-web server && client
     cd t/plugin/grpc-web

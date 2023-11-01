@@ -21,34 +21,6 @@
 
 git checkout conf/config.yaml
 
-# remove stale conf server sock
-touch conf/config_listen.sock
-./bin/apisix start
-sleep 0.5
-./bin/apisix stop
-sleep 0.5
-
-if [ -e conf/config_listen.sock ]; then
-    echo "failed: should remove stale conf server sock"
-    exit 1
-fi
-
-# don't remove stale conf server sock when APISIX is running
-./bin/apisix start
-sleep 0.5
-./bin/apisix start
-sleep 0.5
-
-if [ ! -e conf/config_listen.sock ]; then
-    echo "failed: should not remove stale conf server sock"
-    exit 1
-fi
-
-./bin/apisix stop
-sleep 0.5
-
-echo "passed: stale conf server sock removed"
-
 # check restart with old nginx.pid exist
 echo "-1" > logs/nginx.pid
 out=$(./bin/apisix start 2>&1 || true)
@@ -115,7 +87,7 @@ deployment:
 # check if .customized_config_path has been created
 if [ ! -e conf/.customized_config_path ]; then
     rm conf/customized_config.yaml
-    echo ".config_path file should exits"
+    echo ".customized_config_path should exits"
     exit 1
 fi
 
@@ -130,9 +102,9 @@ fi
 make stop
 
 # check if .customized_config_path has been removed
-if [ -e conf/.config_path ]; then
+if [ -e conf/.customized_config_path ]; then
     rm conf/customized_config_path.yaml
-    echo ".config_path file should be removed"
+    echo ".customized_config_path should be removed"
     exit 1
 fi
 

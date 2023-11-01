@@ -21,7 +21,6 @@ local file = require("apisix.cli.file")
 local schema = require("apisix.cli.schema")
 local ngx_tpl = require("apisix.cli.ngx_tpl")
 local cli_ip = require("apisix.cli.ip")
-local snippet = require("apisix.cli.snippet")
 local profile = require("apisix.core.profile")
 local template = require("resty.template")
 local argparse = require("argparse")
@@ -533,11 +532,6 @@ Please modify "admin_key" in conf/config.yaml .
         proxy_mirror_timeouts = yaml_conf.plugin_attr["proxy-mirror"].timeout
     end
 
-    local conf_server, err = snippet.generate_conf_server(env, yaml_conf)
-    if err then
-        util.die(err, "\n")
-    end
-
     if yaml_conf.deployment and yaml_conf.deployment.role then
         local role = yaml_conf.deployment.role
         env.deployment_role = role
@@ -546,6 +540,16 @@ Please modify "admin_key" in conf/config.yaml .
             local listen = node_listen[1]
             admin_server_addr = str_format("%s:%s", listen.ip, listen.port)
         end
+    end
+
+    local opentelemetry_set_ngx_var
+    if enabled_plugins["opentelemetry"] and yaml_conf.plugin_attr["opentelemetry"] then
+        opentelemetry_set_ngx_var = yaml_conf.plugin_attr["opentelemetry"].set_ngx_var
+    end
+
+    local zipkin_set_ngx_var
+    if enabled_plugins["zipkin"] and yaml_conf.plugin_attr["zipkin"] then
+        zipkin_set_ngx_var = yaml_conf.plugin_attr["zipkin"].set_ngx_var
     end
 
     -- Using template.render
@@ -568,7 +572,8 @@ Please modify "admin_key" in conf/config.yaml .
         control_server_addr = control_server_addr,
         prometheus_server_addr = prometheus_server_addr,
         proxy_mirror_timeouts = proxy_mirror_timeouts,
-        conf_server = conf_server,
+        opentelemetry_set_ngx_var = opentelemetry_set_ngx_var,
+        zipkin_set_ngx_var = zipkin_set_ngx_var
     }
 
     if not yaml_conf.apisix then
@@ -814,20 +819,11 @@ local function start(env, ...)
 
     -- start a new APISIX instance
 
-    local conf_server_sock_path = env.apisix_home .. "/conf/config_listen.sock"
-    if pl_path.exists(conf_server_sock_path) then
-        -- remove stale sock (if exists) so that APISIX can start
-        local ok, err = os_remove(conf_server_sock_path)
-        if not ok then
-            util.die("failed to remove stale conf server sock file, error: ", err)
-        end
-    end
-
     local parser = argparse()
     parser:argument("_", "Placeholder")
     parser:option("-c --config", "location of customized config.yaml")
     -- TODO: more logs for APISIX cli could be added using this feature
-    parser:flag("--verbose", "show init_etcd debug information")
+    parser:flag("-v --verbose", "show init_etcd debug information")
     local args = parser:parse()
 
     local customized_yaml = args["config"]

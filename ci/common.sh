@@ -100,14 +100,6 @@ install_nodejs () {
     npm config set registry https://registry.npmjs.org/
 }
 
-install_rust () {
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo sh -s -- -y
-    source "$HOME/.cargo/env"
-    # 1.69.0 version required to compile lua-resty-ldap
-    rustup install 1.69.0
-    rustup default 1.69.0
-}
-
 set_coredns() {
     # test a domain name is configured as upstream
     echo "127.0.0.1 test.com" | sudo tee -a /etc/hosts
@@ -148,6 +140,9 @@ set_coredns() {
     pushd t/coredns || exit 1
     ../../build-cache/coredns -dns.port=1053 &
     popd || exit 1
+
+    touch build-cache/test_resolve.conf
+    echo "nameserver 127.0.0.1:1053" > build-cache/test_resolve.conf
 }
 
 GRPC_SERVER_EXAMPLE_VER=20210819
@@ -155,4 +150,25 @@ GRPC_SERVER_EXAMPLE_VER=20210819
 linux_get_dependencies () {
     apt update
     apt install -y cpanminus build-essential libncurses5-dev libreadline-dev libssl-dev perl libpcre3 libpcre3-dev libldap2-dev
+}
+
+function start_grpc_server_example() {
+    ./t/grpc_server_example/grpc_server_example \
+        -grpc-address :10051 -grpcs-address :10052 -grpcs-mtls-address :10053 -grpc-http-address :10054 \
+        -crt ./t/certs/apisix.crt -key ./t/certs/apisix.key -ca ./t/certs/mtls_ca.crt \
+        > grpc_server_example.log 2>&1 &
+
+    for (( i = 0; i <= 10; i++ )); do
+        sleep 0.5
+        GRPC_PROC=`ps -ef | grep grpc_server_example | grep -v grep || echo "none"`
+        if [[ $GRPC_PROC == "none" || "$i" -eq 10 ]]; then
+            echo "failed to start grpc_server_example"
+            ss -antp | grep 1005 || echo "no proc listen port 1005x"
+            cat grpc_server_example.log
+
+            exit 1
+        fi
+
+        ss -lntp | grep 10051 | grep grpc_server && break
+    done
 }
